@@ -26,3 +26,7 @@ export { ChoiceCard } from './ChoiceCard';
 export type { ChoiceCardProps } from './ChoiceCard';
 export { Logo } from './Logo';
 export type { LogoProps, LogoSize } from './Logo';
+export { DotProgress } from './DotProgress';
+export type { DotProgressProps } from './DotProgress';
+export { OnboardingLayout } from './OnboardingLayout';
+export type { OnboardingLayoutProps } from './OnboardingLayout';

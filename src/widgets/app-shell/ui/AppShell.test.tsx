@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AppShell } from './AppShell';
 
-function renderShell() {
+function renderShell(path = '/vacancies/new') {
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[path]}>
       <AppShell>
         <div>content</div>
       </AppShell>
@@ -15,13 +15,20 @@ function renderShell() {
 }
 
 describe('AppShell', () => {
-  it('renders the "Vacatures" nav item as active and others as inactive', () => {
+  it('renders the "Vacatures" nav item as active on a vacancy route and others as inactive', () => {
     renderShell();
 
     expect(screen.getByRole('link', { name: /Vacatures/ })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: /Dashboard/ })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: /Kandidaten/ })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: /Statistieken/ })).not.toHaveAttribute('aria-current');
+  });
+
+  it('marks the nav item of the current route as active', () => {
+    renderShell('/dashboard');
+
+    expect(screen.getByRole('link', { name: /Dashboard/ })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: /Vacatures/ })).not.toHaveAttribute('aria-current');
   });
 
   it('renders an avatar chip with initials', () => {

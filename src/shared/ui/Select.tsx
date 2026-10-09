@@ -30,9 +30,20 @@ export interface SelectProps {
   disabled?: boolean;
   /** Short mono badge (e.g. an ISO2 country code) shown between the control text and the chevron. */
   suffix?: string;
+  autoFocus?: boolean;
 }
 
-export function Select({ label, options, value, onChange, error, placeholder, disabled, suffix }: SelectProps) {
+export function Select({
+  label,
+  options,
+  value,
+  onChange,
+  error,
+  placeholder,
+  disabled,
+  suffix,
+  autoFocus,
+}: SelectProps) {
   const id = useId();
   return (
     <div className={styles.field}>
@@ -45,6 +56,7 @@ export function Select({ label, options, value, onChange, error, placeholder, di
           className={`${styles.control}${suffix ? ` ${styles.controlWithSuffix}` : ''}`}
           value={value}
           disabled={disabled}
+          autoFocus={autoFocus}
           onChange={(event) => onChange(event.target.value)}
           aria-invalid={Boolean(error)}
         >

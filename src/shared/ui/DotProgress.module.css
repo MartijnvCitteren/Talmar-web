@@ -1,0 +1,21 @@
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--dot-gap);
+  margin-bottom: var(--space-1);
+
+  /* Tighter than --space-1: the dots read as one control, not four items. */
+  --dot-gap: calc(var(--space-1) * 0.75);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--border-hairline);
+  transition: var(--transition-hover);
+}
+
+.dot[data-on='true'] {
+  background: var(--teal);
+}

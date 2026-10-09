@@ -25,6 +25,15 @@ Opens the app against the API base URL in `public/config.json` (defaults to
   `specs/vacancy.yml`. Run this whenever the OpenAPI contract changes; the output is
   committed, so nobody needs to run it just to build.
 
+## HR signup (UI only, API pending)
+
+`/signup` (4 questions) → `/signup/verify` (check je mail) → `/dashboard` (first-visit
+empty state), built from the Claude Design file "HR Signup High Fidelity". The backend
+contract doesn't exist yet: `entities/account` exposes an `AccountApi` port that is
+currently answered by an in-browser stub (`stubAccountApi.ts`), which marks a new account
+verified ~5 s after signup so the whole flow can be clicked through. Wiring the real API
+means replacing that implementation (search for `TODO(signup-api)`), not the UI.
+
 ## Runtime configuration (ADR-0001)
 
 The API base URL is **not** baked into the build. `src/app/boot.tsx` fetches

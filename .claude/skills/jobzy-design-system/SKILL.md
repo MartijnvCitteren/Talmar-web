@@ -25,7 +25,8 @@ snapshot of it (synced 2026-10-09). If the artifact changes, re-sync `reference/
   families and line-heights, and breakpoints other than 639/640 and 1023/1024px in CSS modules.
 - **Repo extensions** (in `tokens.css`, not yet in the DS artifact): `--text-h2-*` (19px),
   `--text-h3-*` (15px), `--text-title-*` (22px), `--font-weight-*`, `--tracking-*`,
-  `--line-snug`, `--radius-checkbox`, `--scrim`, `--duration-loading`, `--logo-*`. Propose
+  `--line-snug`, `--radius-checkbox`, `--scrim`, `--duration-loading`, `--logo-*`,
+  `--text-step-title-*` (26px, onboarding questions), `--tracking-caption`. Propose
   them to the DS before relying on them more widely.
 
 ## Hard rules
@@ -61,6 +62,8 @@ snapshot of it (synced 2026-10-09). If the artifact changes, re-sync `reference/
 | Status badges | not yet | Build per `reference/components/StatusBadges.md` (shape + color + label) |
 | Motion — loading | `Skeleton` | |
 | Logo | `Logo` `variant="symbol" \| "lockup"`, `size` 28/48/72/112/168 | Never recolor the violet badge; clearspace = height ÷ 2 |
+| (HR signup hi-fi) dot progress | `DotProgress` | Decorative; always paired with a "Stap n van m" caption |
+| (HR signup hi-fi) focused frame | `OnboardingLayout` | Nav-less top bar + 340px column for one-question-per-screen flows |
 
 ## Reference files — read the one you need
 

@@ -1,0 +1,39 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-step-title-size);
+  line-height: var(--text-step-title-line);
+  letter-spacing: normal;
+}
+
+.illustration {
+  display: block;
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: var(--radius-control);
+}
+
+.submit {
+  width: 100%;
+}
+
+/* Icon-only ghost button in the top bar. */
+.back {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back:not(:disabled):hover {
+  background: var(--nav-active-bg);
+}

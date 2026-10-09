@@ -15,6 +15,10 @@ export interface TextFieldProps {
   boldLabel?: boolean;
   /** Visually hides the label (sr-only) while keeping it as the accessible name — for callers like review-vacancy's per-section edit mode, where a visible section header already serves as the label. */
   hideLabel?: boolean;
+  /** Single-line only; ignored for `multiline`. */
+  type?: 'text' | 'email';
+  autoComplete?: string;
+  autoFocus?: boolean;
 }
 
 export function TextField({
@@ -29,8 +33,13 @@ export function TextField({
   helperText,
   boldLabel,
   hideLabel,
+  type,
+  autoComplete,
+  autoFocus,
 }: TextFieldProps) {
   const id = useId();
+  const messageId = `${id}-message`;
+  const message = error ?? helperText;
   const Element = multiline ? 'textarea' : 'input';
   const labelClassName = [styles.label, boldLabel && styles.labelBold, hideLabel && styles.srOnly]
     .filter(Boolean)
@@ -47,11 +56,23 @@ export function TextField({
         placeholder={placeholder}
         maxLength={maxLength}
         disabled={disabled}
+        type={multiline ? undefined : type}
+        autoComplete={autoComplete}
+        autoFocus={autoFocus}
         aria-invalid={Boolean(error)}
+        aria-describedby={message ? messageId : undefined}
         onChange={(event) => onChange(event.target.value)}
       />
-      {helperText && !error && <p className={styles.label}>{helperText}</p>}
-      {error && <p className={styles.error}>{error}</p>}
+      {helperText && !error && (
+        <p id={messageId} className={styles.label}>
+          {helperText}
+        </p>
+      )}
+      {error && (
+        <p id={messageId} className={styles.error}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

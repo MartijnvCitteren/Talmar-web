@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Briefcase,
@@ -12,14 +12,13 @@ import {
 import { Logo } from '../../../shared/ui';
 import styles from './AppShell.module.css';
 
+/** `section` is the path prefix that marks the item active (Vacatures links to "new" but owns all of /vacancies). */
 const navItems = [
-  { label: 'Dashboard', to: '/dashboard', Icon: LayoutDashboard },
-  { label: 'Vacatures', to: '/vacancies/new', Icon: Briefcase },
-  { label: 'Kandidaten', to: '/candidates', Icon: Users },
-  { label: 'Statistieken', to: '/statistics', Icon: ChartBar },
+  { label: 'Dashboard', to: '/dashboard', section: '/dashboard', Icon: LayoutDashboard },
+  { label: 'Vacatures', to: '/vacancies/new', section: '/vacancies', Icon: Briefcase },
+  { label: 'Kandidaten', to: '/candidates', section: '/candidates', Icon: Users },
+  { label: 'Statistieken', to: '/statistics', section: '/statistics', Icon: ChartBar },
 ];
-
-const activeLabel = 'Vacatures';
 
 /**
  * Design note: the account-menu items' actual destinations were never observed
@@ -38,6 +37,7 @@ export interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -58,8 +58,8 @@ export function AppShell({ children }: AppShellProps) {
         <div className={styles.headerInner}>
           <Logo variant="lockup" />
           <nav aria-label="Hoofdnavigatie" className={styles.nav}>
-            {navItems.map(({ label, to, Icon }) => {
-              const isActive = label === activeLabel;
+            {navItems.map(({ label, to, section, Icon }) => {
+              const isActive = pathname === section || pathname.startsWith(`${section}/`);
               return (
                 <Link
                   key={label}
