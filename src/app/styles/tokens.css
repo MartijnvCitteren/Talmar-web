@@ -109,9 +109,13 @@
 
   --surface-page: var(--surface-bg);
   --surface-card: var(--surface);
+  /* Repo extension: fields are white on the warm card so they read as "type here" at a glance. */
+  --surface-input: #ffffff;
   --surface-advice: var(--status-insight-bg);
 
   --border-hairline: var(--border);
+  /* Repo extension: a slightly stronger hairline for fields, so they stand out from the card. */
+  --border-input: oklch(0.82 0.008 90);
   --border-focus: var(--teal);
   --border-error: var(--danger);
 
@@ -129,10 +133,11 @@
   --nav-active-bg: var(--status-passed-bg);
   --nav-active-fg: var(--teal);
 
-  /* Logo — the signal arrow is white on the violet badge in every lockup. */
-  --logo-hub: var(--teal);
-  --logo-signal: var(--violet);
-  --logo-signal-arrow: #ffffff;
+  /* Logo — exact colors of the official logo files (design/talmar-logo); never recolor. */
+  --logo-tile: #006855;
+  --logo-glyph: #fbfaf7;
+  --logo-dot: #724aab;
+  --logo-wordmark: #1c1a15;
 }
 
 * {
