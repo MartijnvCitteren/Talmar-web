@@ -95,6 +95,7 @@ export function VacancyCreatePage() {
                 vacancy
                   ? {
                       jobTitle: vacancy.jobTitle,
+                      language: vacancy.language,
                       category: vacancy.category,
                       country: vacancy.location.country,
                       city: vacancy.location.city,
@@ -161,6 +162,7 @@ export function VacancyCreatePage() {
               description={description}
               mode={mode}
               phase={generation.phase}
+              generationError={generation.error}
               holidayInput={holidayInput}
               onDescriptionSaved={handleDescriptionSaved}
               onRegenerate={mode === 'ai' ? generation.regenerate : undefined}

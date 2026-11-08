@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { descriptionApi, type VacancyDescriptionResponse } from '../../../entities/vacancy-description';
 import { pollUntil } from '../../../shared/lib/polling';
 import type { ApiError } from '../../../shared/api';
+import { toUserMessage } from '../../../shared/lib/problem-details';
 
 export type GenerationPhase = 'idle' | 'generating' | 'ready' | 'failed';
 
@@ -14,10 +15,28 @@ export interface GenerateVacancyDescriptionInputs {
 export type RegeneratableSection = 'summary' | 'jobDescription' | 'tasks';
 
 const POLL_INTERVAL_MS = 2000;
-const POLL_TIMEOUT_MS = 60000;
+/**
+ * The API gives up on a generation after 90 seconds and then answers the poll with a `500`, so
+ * polling a little longer than that always ends in an answer from the API rather than a guess.
+ */
+const POLL_TIMEOUT_MS = 100_000;
 
-const FAILURE_MESSAGE =
-  'Genereren van de vacaturetekst is mislukt. Je kunt de tekst hieronder handmatig invullen.';
+export const GENERATION_FAILED_MESSAGE =
+  'Het opstellen van je vacaturetekst is niet gelukt. Probeer het opnieuw, of schrijf de tekst zelf.';
+
+/**
+ * The poll answers a failed generation with a problem response; each status asks something
+ * different of the recruiter (contract: `GET /vacancy/{id}/generate-description/{generationId}`).
+ */
+const generationFailureMessages: Record<number, string> = {
+  // The inputs were rejected as not describing a job: retrying the same answers won't help.
+  422: 'Uit je antwoorden konden we geen vacaturetekst maken. Schrijf de tekst zelf, of probeer het opnieuw met concretere antwoorden over de functie.',
+  // The AI provider refuses in a way a retry won't fix.
+  503: 'Het opstellen met AI is op dit moment niet beschikbaar. Je kunt de tekst zelf schrijven.',
+  // The draft is kept for 32 hours.
+  404: 'Je concepttekst is verlopen. Probeer het opnieuw, of schrijf de tekst zelf.',
+  500: GENERATION_FAILED_MESSAGE,
+};
 
 export function useGenerateVacancyDescription(vacancyId: string) {
   const [phase, setPhase] = useState<GenerationPhase>('idle');
@@ -39,7 +58,7 @@ export function useGenerateVacancyDescription(vacancyId: string) {
         );
 
         if (generation.status === 'FAILED' || !generation.description) {
-          setError(FAILURE_MESSAGE);
+          setError(GENERATION_FAILED_MESSAGE);
           setPhase('failed');
           return;
         }
@@ -47,8 +66,11 @@ export function useGenerateVacancyDescription(vacancyId: string) {
         setResult(generation.description);
         setPhase('ready');
       } catch (caught) {
-        const apiError = caught as ApiError;
-        setError(apiError.detail ?? apiError.title ?? FAILURE_MESSAGE);
+        // A poll timeout is a plain Error without a status: treated like any other failure.
+        const apiError = caught as Partial<ApiError>;
+        setError(
+          toUserMessage(apiError, { fallback: GENERATION_FAILED_MESSAGE, byStatus: generationFailureMessages }),
+        );
         setPhase('failed');
       }
     },

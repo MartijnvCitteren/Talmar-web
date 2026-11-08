@@ -84,7 +84,37 @@ describe('useGenerateVacancyDescription', () => {
     });
 
     await waitFor(() => expect(result.current.phase).toBe('failed'));
-    expect(result.current.error).toMatch(/mislukt/i);
+    expect(result.current.error).toMatch(/niet gelukt/i);
+  });
+
+  it.each([
+    [422, /concretere antwoorden/],
+    [500, /niet gelukt/],
+    [503, /niet beschikbaar/],
+    [404, /verlopen/],
+  ])('shows a Dutch message for a %d problem response from the poll', async (status, message) => {
+    vi.mocked(descriptionApi.generateDescription).mockResolvedValue({
+      generationId: 'gen-1',
+      status: 'PENDING',
+    });
+    vi.mocked(descriptionApi.getGenerationStatus).mockRejectedValue({
+      title: 'Description generation failed',
+      status,
+      detail: 'English detail meant for developers',
+    });
+
+    const { result } = renderHook(() => useGenerateVacancyDescription('vacancy-1'));
+
+    act(() => {
+      result.current.start(inputs);
+    });
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+
+    await waitFor(() => expect(result.current.phase).toBe('failed'));
+    expect(result.current.error).toMatch(message);
+    expect(result.current.error).not.toMatch(/English/);
   });
 
   it('regenerate(section) re-runs generation and only replaces the requested section', async () => {

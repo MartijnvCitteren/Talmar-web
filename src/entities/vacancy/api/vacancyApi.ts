@@ -1,25 +1,22 @@
 import { httpClient } from '../../../shared/api';
 import type {
   ContactPerson,
-  Location,
   Offer,
-  VacancyCategory,
   VacancyCoreRequest,
   VacancyResponse,
-  WorkplaceType,
+  VacancyTransitionAction,
 } from '../model/types';
 
 /**
- * Deliberately excludes hours-per-week: `VacancyUpdateRequest` has no contract-valid way
- * to change hours after creation. See ADR-0002.
+ * The core section as `PATCH /vacancy/{id}` accepts it: the same fields as on creation.
+ * `minHoursPerWeek` and `maxHoursPerWeek` must be sent together, so both are required here.
  */
-export interface VacancyCorePatch {
-  jobTitle?: string;
-  category?: VacancyCategory;
-  location?: Location;
-  workplaceType?: WorkplaceType;
-}
+export type VacancyCorePatch = VacancyCoreRequest;
 
+/**
+ * Contact person and offer as `PATCH /vacancy/{id}` accepts them. Each section is replaced as a
+ * whole; an omitted section is left untouched.
+ */
 export interface VacancyContactOfferPatch {
   contactPerson?: ContactPerson;
   offer?: Offer;
@@ -35,7 +32,10 @@ export const vacancyApi = {
   patchVacancyContactOffer(id: string, body: VacancyContactOfferPatch): Promise<VacancyResponse> {
     return httpClient.patch<VacancyResponse>(`/vacancy/${id}`, body);
   },
+  transitionVacancy(id: string, action: VacancyTransitionAction): Promise<VacancyResponse> {
+    return httpClient.post<VacancyResponse>(`/vacancy/${id}/transitions`, { action });
+  },
   publishVacancy(id: string): Promise<VacancyResponse> {
-    return httpClient.post<VacancyResponse>(`/vacancy/${id}/publish`, undefined);
+    return vacancyApi.transitionVacancy(id, 'PUBLISH');
   },
 };

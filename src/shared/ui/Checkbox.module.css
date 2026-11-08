@@ -11,8 +11,8 @@
   width: 18px;
   height: 18px;
   border-radius: var(--radius-checkbox);
-  border: 1.5px solid var(--border-hairline);
-  background: var(--surface-card);
+  border: 1.5px solid var(--border-input);
+  background: var(--surface-input);
   display: inline-flex;
   align-items: center;
   justify-content: center;
