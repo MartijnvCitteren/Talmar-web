@@ -1,19 +1,21 @@
 import { useState } from 'react';
-import { Sparkles, CircleCheck } from 'lucide-react';
+import { Sparkles, CircleCheck, Square } from 'lucide-react';
 import {
+  currencyOptions,
   holidayPeriodOptions,
   salaryPeriodOptions,
   toAnnualHolidayDays,
   vacancyApi,
   type ContactPerson,
+  type CurrencyCode,
   type HolidayPeriod,
   type Offer,
   type SalaryPeriod,
   type VacancyResponse,
 } from '../../../entities/vacancy';
 import type { ApiError } from '../../../shared/api';
+import { toFieldErrors, toUserMessage } from '../../../shared/lib/problem-details';
 import { Button, Card, Checkbox, ErrorBanner, NumberField, Select, TextField } from '../../../shared/ui';
-import { currencyOptions } from '../lib/currencies';
 import styles from './VacancyContactOfferForm.module.css';
 
 /**
@@ -55,7 +57,7 @@ interface FormValues {
   email: string;
   salaryMin: number | '';
   salaryMax: number | '';
-  currency: string;
+  currency: CurrencyCode | '';
   salaryPeriod: SalaryPeriod | '';
   numberOfHolidays: number | '';
 }
@@ -78,29 +80,103 @@ function toFormValues(
   };
 }
 
-function validate(values: FormValues, hideSalary: boolean): Record<string, string> {
+/** The same rules as `ContactPerson` in the API contract, so the API never has to reject them. */
+const NAME_PATTERN = /^(?=.*\p{L})[\p{L}\p{M}'’.-]+( [\p{L}\p{M}'’.-]+)*$/u;
+const ROLE_PATTERN = /^[\p{L}\p{M}\p{N} &/(),.'’+-]+$/u;
+const PHONE_PATTERN = /^\+?(?:[ ()./-]*[0-9]){6,15}[ ()./-]*$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_SALARY = 100_000_000;
+const MAX_HOLIDAYS = 60;
+
+const messages = {
+  name: 'Vul een naam in van 2 tot 35 letters. Alleen letters, spaties, punten, apostroffen en streepjes.',
+  role: 'Gebruik maximaal 50 tekens: letters, cijfers, spaties en & / ( ) , . \' + -',
+  phone: 'Vul een telefoonnummer in van 6 tot 15 cijfers, eventueel met + aan het begin.',
+  email: 'Vul een geldig e-mailadres in, bijvoorbeeld naam@bedrijf.nl.',
+  salaryMin: 'Vul een salaris in vanaf 0.',
+  salaryMax: 'Vul een salaris in vanaf 0.',
+  currency: 'Kies een valuta bij het salaris.',
+  salaryPeriod: 'Kies een salarisperiode bij het salaris.',
+  numberOfHolidays: `Vul een aantal vakantiedagen in van 0 tot ${MAX_HOLIDAYS} per jaar.`,
+  offer: 'Vul een salaris of het aantal vakantiedagen in.',
+};
+
+function validate(values: FormValues, hideSalary: boolean, holidayPeriod: HolidayPeriod): Record<string, string> {
   const errors: Record<string, string> = {};
-  if (values.name.trim().length < 2) {
-    errors.name = 'Naam is verplicht.';
+  const name = values.name.trim();
+  if (name.length < 2 || name.length > 35 || !NAME_PATTERN.test(name)) {
+    errors.name = messages.name;
   }
-  if (!values.email.trim()) {
-    errors.email = 'E-mailadres is verplicht.';
+  const role = values.role.trim();
+  if (role && (role.length > 50 || !ROLE_PATTERN.test(role))) {
+    errors.role = messages.role;
+  }
+  const phone = values.phone.trim();
+  if (phone && (phone.length > 25 || !PHONE_PATTERN.test(phone))) {
+    errors.phone = messages.phone;
+  }
+  const email = values.email.trim();
+  if (!email || email.length > 75 || !EMAIL_PATTERN.test(email)) {
+    errors.email = messages.email;
   }
 
-  if (!hideSalary) {
-    const hasSalary = values.salaryMin !== '' || values.salaryMax !== '';
-    if (hasSalary && !values.currency) {
-      errors.currency = 'Valuta is verplicht bij een ingevuld salaris.';
+  const hasSalary = !hideSalary && (values.salaryMin !== '' || values.salaryMax !== '');
+  if (hasSalary) {
+    if (values.salaryMin !== '' && (values.salaryMin < 0 || values.salaryMin > MAX_SALARY)) {
+      errors.salaryMin = messages.salaryMin;
     }
-    if (hasSalary && !values.salaryPeriod) {
-      errors.salaryPeriod = 'Salarisperiode is verplicht bij een ingevuld salaris.';
+    if (values.salaryMax !== '' && (values.salaryMax < 0 || values.salaryMax > MAX_SALARY)) {
+      errors.salaryMax = messages.salaryMax;
+    }
+    if (values.salaryMin !== '' && values.salaryMax !== '' && values.salaryMin > values.salaryMax) {
+      errors.salaryMax = 'Het maximum moet minstens zo hoog zijn als het minimum.';
+    }
+    if (!values.currency) {
+      errors.currency = messages.currency;
+    }
+    if (!values.salaryPeriod) {
+      errors.salaryPeriod = messages.salaryPeriod;
+    }
+  }
+
+  if (values.numberOfHolidays !== '') {
+    const annual = toAnnualHolidayDays(values.numberOfHolidays, holidayPeriod);
+    if (values.numberOfHolidays < 0 || annual > MAX_HOLIDAYS) {
+      errors.numberOfHolidays = messages.numberOfHolidays;
     }
   }
 
   return errors;
 }
 
+/**
+ * The offer as the API wants it, or `undefined` when there is nothing to send: the API rejects an
+ * offer without a salary and without holidays, so a recruiter who shares neither sends no offer.
+ */
+function toOffer(values: FormValues, hideSalary: boolean, holidayPeriod: HolidayPeriod): Offer | undefined {
+  const offer: Offer = {};
+  if (!hideSalary && values.salaryMin !== '') offer.salaryMin = values.salaryMin;
+  if (!hideSalary && values.salaryMax !== '') offer.salaryMax = values.salaryMax;
+  if (offer.salaryMin != null || offer.salaryMax != null) {
+    offer.currency = values.currency || undefined;
+    offer.salaryPeriod = values.salaryPeriod || undefined;
+  }
+  if (values.numberOfHolidays !== '') {
+    offer.numberOfHolidays = toAnnualHolidayDays(values.numberOfHolidays, holidayPeriod);
+  }
+  return Object.keys(offer).length > 0 ? offer : undefined;
+}
+
 function GenerationBanner({ phase }: { phase: VacancyContactOfferGenerationPhase }) {
+  if (phase === 'failed') {
+    return (
+      <div className={styles.bannerFailed} role="status">
+        <Square size={14} aria-hidden="true" />
+        Je vacaturetekst kon niet worden opgesteld. Ga gerust verder — in het overzicht lees je waarom en kun je de tekst zelf schrijven.
+      </div>
+    );
+  }
+
   if (phase === 'ready') {
     return (
       <div className={styles.bannerReady}>
@@ -139,7 +215,7 @@ export function VacancyContactOfferForm({
   }
 
   async function save() {
-    const errors = validate(values, hideSalary);
+    const errors = validate(values, hideSalary, holidayPeriod);
     setFieldErrors(errors);
     setTopLevelError(undefined);
     if (Object.keys(errors).length > 0) {
@@ -148,31 +224,23 @@ export function VacancyContactOfferForm({
 
     setSaving(true);
     try {
-      const submittedContactPerson: ContactPerson = {
-        name: values.name,
-        role: values.role || undefined,
-        phone: values.phone || undefined,
-        email: values.email,
+      const contactPerson: ContactPerson = {
+        name: values.name.trim(),
+        role: values.role.trim() || undefined,
+        phone: values.phone.trim() || undefined,
+        email: values.email.trim(),
       };
-      const submittedOffer: Offer = {
-        salaryMin: hideSalary || values.salaryMin === '' ? null : values.salaryMin,
-        salaryMax: hideSalary || values.salaryMax === '' ? null : values.salaryMax,
-        currency: hideSalary ? undefined : values.currency || undefined,
-        salaryPeriod: hideSalary ? undefined : values.salaryPeriod || undefined,
-        numberOfHolidays:
-          values.numberOfHolidays === '' ? null : toAnnualHolidayDays(values.numberOfHolidays, holidayPeriod),
-      };
+      const offer = toOffer(values, hideSalary, holidayPeriod);
       const response = await vacancyApi.patchVacancyContactOffer(vacancyId, {
-        contactPerson: submittedContactPerson,
-        offer: submittedOffer,
+        contactPerson,
+        ...(offer ? { offer } : {}),
       });
-      // §11.2: `VacancyResponse` doesn't require contactPerson/offer — a response that
-      // omits a section the user just submitted is contract-legal, so fall back to what
-      // was sent rather than silently dropping it from what the page trusts as "saved".
+      // Defensive: `VacancyResponse` does not require contactPerson/offer, so a response without
+      // them is contract-legal; fall back to what was just sent rather than dropping it.
       onSaved({
         ...response,
-        contactPerson: response.contactPerson ?? submittedContactPerson,
-        offer: response.offer ?? submittedOffer,
+        contactPerson: response.contactPerson ?? contactPerson,
+        offer: response.offer ?? offer,
       });
       onHolidayInputChange?.(
         values.numberOfHolidays === '' ? undefined : { amount: values.numberOfHolidays, period: holidayPeriod },
@@ -180,9 +248,18 @@ export function VacancyContactOfferForm({
     } catch (caught) {
       const apiError = caught as ApiError;
       if (apiError.status === 400 && apiError.errors?.length) {
-        setFieldErrors(Object.fromEntries(apiError.errors.map((e) => [e.field, e.message])));
+        const apiFieldErrors = toFieldErrors(apiError.errors, messages);
+        setFieldErrors(apiFieldErrors);
+        if (apiFieldErrors.offer) {
+          setTopLevelError(apiFieldErrors.offer);
+        }
       } else {
-        setTopLevelError(apiError.detail ?? apiError.title ?? 'Opslaan is mislukt.');
+        setTopLevelError(
+          toUserMessage(apiError, {
+            fallback: 'Opslaan is niet gelukt. Probeer het zo nog eens.',
+            byStatus: { 400: 'Niet alle gegevens kloppen nog. Kijk de velden even na.' },
+          }),
+        );
       }
     } finally {
       setSaving(false);
@@ -196,12 +273,12 @@ export function VacancyContactOfferForm({
         <h2>Contact en voorwaarden</h2>
         <ErrorBanner message={topLevelError} />
         <div className={styles.contactGrid}>
-          <TextField label="Naam" value={values.name} onChange={(v) => setField('name', v)} error={fieldErrors.name} maxLength={50} />
-          <TextField label="Rol" value={values.role} onChange={(v) => setField('role', v)} maxLength={100} />
+          <TextField label="Naam" value={values.name} onChange={(v) => setField('name', v)} error={fieldErrors.name} maxLength={35} />
+          <TextField label="Rol" value={values.role} onChange={(v) => setField('role', v)} error={fieldErrors.role} maxLength={50} />
         </div>
         <div className={styles.contactGrid}>
-          <TextField label="Telefoon" value={values.phone} onChange={(v) => setField('phone', v)} maxLength={20} />
-          <TextField label="E-mailadres" value={values.email} onChange={(v) => setField('email', v)} error={fieldErrors.email} />
+          <TextField label="Telefoon" value={values.phone} onChange={(v) => setField('phone', v)} error={fieldErrors.phone} maxLength={25} />
+          <TextField label="E-mailadres" value={values.email} onChange={(v) => setField('email', v)} error={fieldErrors.email} maxLength={75} />
         </div>
 
         <div className={styles.salaryHeader}>
@@ -211,8 +288,8 @@ export function VacancyContactOfferForm({
 
         {!hideSalary && (
           <div className={styles.contactGrid}>
-            <NumberField label="Salaris minimum" value={values.salaryMin} onChange={(v) => setField('salaryMin', v)} />
-            <NumberField label="Salaris maximum" value={values.salaryMax} onChange={(v) => setField('salaryMax', v)} />
+            <NumberField label="Salaris minimum" value={values.salaryMin} onChange={(v) => setField('salaryMin', v)} error={fieldErrors.salaryMin} min={0} />
+            <NumberField label="Salaris maximum" value={values.salaryMax} onChange={(v) => setField('salaryMax', v)} error={fieldErrors.salaryMax} min={0} />
           </div>
         )}
         {!hideSalary && (
@@ -220,7 +297,7 @@ export function VacancyContactOfferForm({
             <Select
               label="Valuta"
               value={values.currency}
-              onChange={(v) => setField('currency', v)}
+              onChange={(v) => setField('currency', v as CurrencyCode)}
               options={currencyOptions}
               placeholder="Kies een valuta"
               error={fieldErrors.currency}
@@ -240,6 +317,8 @@ export function VacancyContactOfferForm({
             label="Aantal vakantiedagen"
             value={values.numberOfHolidays}
             onChange={(v) => setField('numberOfHolidays', v)}
+            error={fieldErrors.numberOfHolidays}
+            min={0}
           />
           <Select
             label="Periode vakantiedagen"

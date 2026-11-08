@@ -53,7 +53,7 @@ async function toApiError(response: Response): Promise<ApiError> {
 
 async function request<TResponse>(
   path: string,
-  init: { method: string; body?: unknown; contentType?: string },
+  init: { method: string; body?: unknown },
 ): Promise<TResponse> {
   const { apiBaseUrl } = getRuntimeConfig();
   const url = `${apiBaseUrl}${path}`;
@@ -62,7 +62,7 @@ async function request<TResponse>(
   try {
     response = await fetch(url, {
       method: init.method,
-      headers: buildHeaders(init.body !== undefined ? (init.contentType ?? 'application/json') : undefined),
+      headers: buildHeaders(init.body !== undefined ? 'application/json' : undefined),
       body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
     });
   } catch (cause) {
@@ -92,8 +92,8 @@ export const httpClient = {
   post<TResponse>(path: string, body: unknown): Promise<TResponse> {
     return request<TResponse>(path, { method: 'POST', body });
   },
-  patch<TResponse>(path: string, body: unknown, contentType = 'application/merge-patch+json'): Promise<TResponse> {
-    return request<TResponse>(path, { method: 'PATCH', body, contentType });
+  patch<TResponse>(path: string, body: unknown): Promise<TResponse> {
+    return request<TResponse>(path, { method: 'PATCH', body });
   },
   delete<TResponse>(path: string): Promise<TResponse> {
     return request<TResponse>(path, { method: 'DELETE' });

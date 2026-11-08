@@ -92,7 +92,7 @@ describe('PublishConfirmModal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Ja, publiceer' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Vacancy cannot be published in its current state.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/kan nu niet worden gepubliceerd/);
     expect(onClose).not.toHaveBeenCalled();
     expect(onPublished).not.toHaveBeenCalled();
   });

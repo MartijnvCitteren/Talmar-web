@@ -97,7 +97,7 @@ describe('VacancyCoreForm', () => {
     expect(onSaved).toHaveBeenCalledWith(createdVacancy);
   });
 
-  it('calls patchVacancyCore on resubmission when a vacancyId already exists', async () => {
+  it('calls patchVacancyCore with every core field, hours included, when a vacancyId already exists', async () => {
     const user = userEvent.setup();
     vi.mocked(vacancyApi.patchVacancyCore).mockResolvedValue(createdVacancy);
     const onSaved = vi.fn();
@@ -106,6 +106,7 @@ describe('VacancyCoreForm', () => {
         vacancyId="vacancy-1"
         initialValues={{
           jobTitle: 'Senior Backend Developer',
+          language: 'EN',
           category: 'ENGINEERING',
           country: 'NL',
           city: 'Amsterdam',
@@ -117,54 +118,22 @@ describe('VacancyCoreForm', () => {
       />,
     );
 
+    await user.clear(screen.getByLabelText('Uren per week (maximum)'));
+    await user.type(screen.getByLabelText('Uren per week (maximum)'), '40');
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
 
     await waitFor(() => expect(vacancyApi.patchVacancyCore).toHaveBeenCalledTimes(1));
     expect(vacancyApi.createVacancy).not.toHaveBeenCalled();
     expect(vacancyApi.patchVacancyCore).toHaveBeenCalledWith('vacancy-1', {
       jobTitle: 'Senior Backend Developer',
+      language: 'EN',
       category: 'ENGINEERING',
       location: { country: 'NL', city: 'Amsterdam' },
       workplaceType: 'HYBRID',
+      minHoursPerWeek: 24,
+      maxHoursPerWeek: 40,
     });
-  });
-
-  it('preserves minHoursPerWeek/maxHoursPerWeek in onSaved when the patchVacancyCore response omits them (§11.2)', async () => {
-    const user = userEvent.setup();
-    vi.mocked(vacancyApi.patchVacancyCore).mockResolvedValue({
-      id: 'vacancy-1',
-      status: 'DRAFT',
-      jobTitle: 'Senior Backend Developer',
-      category: 'ENGINEERING',
-      location: { country: 'NL', city: 'Amsterdam' },
-      workplaceType: 'HYBRID',
-      createdAt: '2026-09-19T00:00:00Z',
-      // minHoursPerWeek/maxHoursPerWeek omitted, as a contract-legal but data-losing response.
-    } as unknown as VacancyResponse);
-    const onSaved = vi.fn();
-    render(
-      <VacancyCoreForm
-        vacancyId="vacancy-1"
-        initialValues={{
-          jobTitle: 'Senior Backend Developer',
-          category: 'ENGINEERING',
-          country: 'NL',
-          city: 'Amsterdam',
-          workplaceType: 'HYBRID',
-          minHoursPerWeek: 24,
-          maxHoursPerWeek: 36,
-        }}
-        onSaved={onSaved}
-      />,
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Volgende' }));
-
-    await waitFor(() =>
-      expect(onSaved).toHaveBeenCalledWith(
-        expect.objectContaining({ minHoursPerWeek: 24, maxHoursPerWeek: 36 }),
-      ),
-    );
+    expect(onSaved).toHaveBeenCalledWith(createdVacancy);
   });
 
   it('renders per-field errors from a 400 ApiError response', async () => {
@@ -172,14 +141,19 @@ describe('VacancyCoreForm', () => {
     vi.mocked(vacancyApi.createVacancy).mockRejectedValue({
       title: 'Validation failed',
       status: 400,
-      errors: [{ field: 'jobTitle', message: 'Titel is te kort.' }],
+      errors: [
+        { field: 'jobTitle', message: 'size must be between 2 and 100' },
+        { field: 'location.city', message: 'size must be between 0 and 200' },
+      ],
     });
     render(<VacancyCoreForm vacancyId={null} onSaved={vi.fn()} />);
 
     await fillValidForm(user);
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
 
-    expect(await screen.findByText('Titel is te kort.')).toBeInTheDocument();
+    expect(await screen.findByText('Gebruik 2 tot 100 tekens voor de functietitel.')).toBeInTheDocument();
+    expect(screen.getByText('Vul een stad in van maximaal 200 tekens.')).toBeInTheDocument();
+    expect(screen.queryByText(/size must be/)).not.toBeInTheDocument();
   });
 
   it('renders a top-level error banner for a non-field/unreachable-backend error', async () => {
@@ -193,7 +167,7 @@ describe('VacancyCoreForm', () => {
     await fillValidForm(user);
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Netwerkfout: de server is niet bereikbaar.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/server nu niet bereiken/);
   });
 
   it('calls onSaved (page lifts "Concept opgeslagen" display, per §10.1 item 7) after a successful save', async () => {
@@ -208,27 +182,52 @@ describe('VacancyCoreForm', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(createdVacancy));
   });
 
-  it('renders the hours-per-week fields as read-only once a vacancyId already exists', () => {
+  it('sends the chosen vacancy language, Dutch by default, on creation', async () => {
+    const user = userEvent.setup();
+    vi.mocked(vacancyApi.createVacancy).mockResolvedValue(createdVacancy);
+    render(<VacancyCoreForm vacancyId={null} onSaved={vi.fn()} />);
+
+    expect(screen.getByLabelText('Taal van de vacature')).toHaveValue('NL');
+    await fillValidForm(user);
+    await user.selectOptions(screen.getByLabelText('Taal van de vacature'), 'EN');
+    await user.click(screen.getByRole('button', { name: 'Volgende' }));
+
+    await waitFor(() =>
+      expect(vacancyApi.createVacancy).toHaveBeenCalledWith({
+        jobTitle: 'Senior Backend Developer',
+        language: 'EN',
+        category: 'ENGINEERING',
+        location: { country: 'NL', city: 'Amsterdam' },
+        workplaceType: 'HYBRID',
+        minHoursPerWeek: 24,
+        maxHoursPerWeek: 36,
+      }),
+    );
+  });
+
+  it('rejects a maximum below the minimum hours without calling the API', async () => {
+    const user = userEvent.setup();
+    render(<VacancyCoreForm vacancyId={null} onSaved={vi.fn()} />);
+
+    await fillValidForm(user);
+    await user.clear(screen.getByLabelText('Uren per week (maximum)'));
+    await user.type(screen.getByLabelText('Uren per week (maximum)'), '20');
+    await user.click(screen.getByRole('button', { name: 'Volgende' }));
+
+    expect(await screen.findByText('Het maximum moet minstens zo hoog zijn als het minimum.')).toBeInTheDocument();
+    expect(vacancyApi.createVacancy).not.toHaveBeenCalled();
+  });
+
+  it('keeps the hours-per-week fields editable once a vacancyId already exists', () => {
     render(
       <VacancyCoreForm
         vacancyId="vacancy-1"
-        initialValues={{
-          jobTitle: 'Senior Backend Developer',
-          category: 'ENGINEERING',
-          country: 'NL',
-          city: 'Amsterdam',
-          workplaceType: 'HYBRID',
-          minHoursPerWeek: 24,
-          maxHoursPerWeek: 36,
-        }}
+        initialValues={{ minHoursPerWeek: 24, maxHoursPerWeek: 36 }}
         onSaved={vi.fn()}
       />,
     );
 
-    expect(screen.getByLabelText('Uren per week (minimum)')).toBeDisabled();
-    expect(screen.getByLabelText('Uren per week (maximum)')).toBeDisabled();
-    expect(
-      screen.getByText('Uren per week kunnen na aanmaken niet meer worden aangepast.'),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Uren per week (minimum)')).toBeEnabled();
+    expect(screen.getByLabelText('Uren per week (maximum)')).toBeEnabled();
   });
 });
