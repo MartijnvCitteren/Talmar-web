@@ -173,7 +173,7 @@ describe('VacancyCreatePage', () => {
 
     await completeStep1(user).catch(() => undefined);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Netwerkfout: de server is niet bereikbaar.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/server nu niet bereiken/);
   });
 
   it('full click-through in manual mode: step 1 -> mode choice -> step 2 write -> step 3 -> step 4 -> preview -> publish -> published', async () => {
@@ -279,7 +279,7 @@ describe('VacancyCreatePage', () => {
     vi.mocked(vacancyApi.patchVacancyContactOffer).mockResolvedValue({
       ...createdVacancy,
       contactPerson: { name: 'Jane Doe', email: 'jane@example.com' },
-      offer: { numberOfHolidays: 260 },
+      offer: { numberOfHolidays: 24 },
     } as unknown as VacancyResponse);
 
     renderPage();
@@ -296,14 +296,14 @@ describe('VacancyCreatePage', () => {
 
     await user.type(screen.getByLabelText('Naam'), 'Jane Doe');
     await user.type(screen.getByLabelText('E-mailadres'), 'jane@example.com');
-    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '5');
-    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'WEEKLY');
+    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '2');
+    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'MONTHLY');
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
     await waitFor(() => expect(vacancyApi.patchVacancyContactOffer).toHaveBeenCalledTimes(1));
 
     expect(await screen.findByRole('heading', { name: 'Overzicht' })).toBeInTheDocument();
-    expect(screen.getByText('5 vakantiedagen per week')).toBeInTheDocument();
-    expect(screen.queryByText('260 vakantiedagen per jaar')).not.toBeInTheDocument();
+    expect(screen.getByText('2 vakantiedagen per maand')).toBeInTheDocument();
+    expect(screen.queryByText('24 vakantiedagen per jaar')).not.toBeInTheDocument();
   });
 
   it('redisplays the entered vakantiedagen amount/period (not the converted annual figure) when returning to step 3 from Overzicht', async () => {
@@ -313,7 +313,7 @@ describe('VacancyCreatePage', () => {
     vi.mocked(vacancyApi.patchVacancyContactOffer).mockResolvedValue({
       ...createdVacancy,
       contactPerson: { name: 'Jane Doe', email: 'jane@example.com' },
-      offer: { numberOfHolidays: 260 },
+      offer: { numberOfHolidays: 24 },
     } as unknown as VacancyResponse);
 
     renderPage();
@@ -330,16 +330,16 @@ describe('VacancyCreatePage', () => {
 
     await user.type(screen.getByLabelText('Naam'), 'Jane Doe');
     await user.type(screen.getByLabelText('E-mailadres'), 'jane@example.com');
-    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '5');
-    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'WEEKLY');
+    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '2');
+    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'MONTHLY');
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
     await waitFor(() => expect(vacancyApi.patchVacancyContactOffer).toHaveBeenCalledTimes(1));
 
     expect(await screen.findByRole('heading', { name: 'Overzicht' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Aanpassen contact en voorwaarden' }));
 
-    expect(await screen.findByLabelText('Aantal vakantiedagen')).toHaveValue(5);
-    expect(screen.getByLabelText('Periode vakantiedagen')).toHaveValue('WEEKLY');
+    expect(await screen.findByLabelText('Aantal vakantiedagen')).toHaveValue(2);
+    expect(screen.getByLabelText('Periode vakantiedagen')).toHaveValue('MONTHLY');
   });
 
   it('full click-through in AI mode: mode choice opens the 3-questions modal and gates step 3/4 on the shared generation phase', async () => {

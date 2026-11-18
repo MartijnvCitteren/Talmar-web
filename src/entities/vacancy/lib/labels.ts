@@ -1,4 +1,4 @@
-import type { SalaryPeriod, VacancyCategory, WorkplaceType } from '../model/types';
+import type { CurrencyCode, Language, SalaryPeriod, VacancyCategory, WorkplaceType } from '../model/types';
 
 /**
  * Flat Dutch labels for the API's 21-value VacancyCategory enum (source of truth per the
@@ -58,3 +58,42 @@ export const salaryPeriodOptions = (Object.keys(salaryPeriodLabels) as SalaryPer
   value,
   label: salaryPeriodLabels[value],
 }));
+
+/** The language the vacancy texts are written in; also the language AI drafts are generated in. */
+export const languageLabels: Record<Language, string> = {
+  NL: 'Nederlands',
+  EN: 'Engels',
+  DE: 'Duits',
+  FR: 'Frans',
+};
+
+export const languageOptions = (Object.keys(languageLabels) as Language[]).map((value) => ({
+  value,
+  label: languageLabels[value],
+}));
+
+/**
+ * Every currency the API accepts (`CurrencyCode`), euro first, then by how often Talmar's
+ * markets use them. Shown as the ISO code, which is how recruiters know them.
+ */
+export const currencyCodes: CurrencyCode[] = [
+  'EUR',
+  'GBP',
+  'CHF',
+  'SEK',
+  'NOK',
+  'DKK',
+  'PLN',
+  'CZK',
+  'HUF',
+  'RON',
+  'ISK',
+  'ALL',
+  'BAM',
+  'MKD',
+  'MDL',
+  'RSD',
+  'UAH',
+];
+
+export const currencyOptions = currencyCodes.map((value) => ({ value, label: value }));

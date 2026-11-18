@@ -21,14 +21,19 @@ is "Talmar" and the logo files are `talmar-*.svg`.
   in `src/app/boot.tsx`. Matches `reference/tokens.json` 1:1.
 - **Components:** `src/shared/ui` (exported via `src/shared/ui/index.ts`).
 - **Logo:** in the UI always `<Logo />` / `<Logo variant="lockup" />` from `shared/ui` — never
-  an `<img>` of the SVGs (an SVG loaded as an image can't use Inter, and its badge ring isn't
-  a knockout). `public/branding/talmar-symbol.svg` and `talmar-lockup.svg` are the DS asset
-  files, used for the favicon only.
+  an `<img>` of the SVGs. The component is drawn from the official Talmar vectors in
+  `design/talmar-logo/svg` (next to this repo): the "t"-with-dot icon on a green tile, and
+  the wordmark as outlined paths. Its colors are the `--logo-*` tokens, the exact values of
+  those files. `public/branding/talmar-symbol.svg` (= `talmar-icon.svg`),
+  `talmar-lockup.svg`, `talmar-icon-180.png` and `public/favicon.ico` are copies of the
+  official files, used for the favicon only. The old reconstructed Jobzy mark (square hub
+  with a signal badge) is gone; `reference/components/Logo.md` still describes it.
 - **Icons:** `lucide-react`.
 - **Enforcement:** `npm run lint:css` (Stylelint, `stylelint.config.js`, part of `npm run lint`)
   rejects color literals, unit literals for spacing/radius/type/motion, literal font weights,
   families and line-heights, and breakpoints other than 639/640 and 1023/1024px in CSS modules.
-- **Repo extensions** (in `tokens.css`, not yet in the DS artifact): `--text-h2-*` (19px),
+- **Repo extensions** (in `tokens.css`, not yet in the DS artifact): `--surface-input` (white
+  field background) and `--border-input` (field hairline), `--text-h2-*` (19px),
   `--text-h3-*` (15px), `--text-title-*` (22px), `--font-weight-*`, `--tracking-*`,
   `--line-snug`, `--radius-checkbox`, `--scrim`, `--duration-loading`, `--logo-*`. Propose
   them to the DS before relying on them more widely.
@@ -62,10 +67,10 @@ is "Talmar" and the logo files are `talmar-*.svg`.
 | --- | --- | --- |
 | Buttons — primary / secondary / ghost | `Button` `variant="primary" \| "secondary" \| "text"` | DS "ghost" = `text`; 15px/600, teal secondary outline, shared disabled style |
 | Buttons — reject candidate | not yet | Add as a `Button` variant using `--action-destructive` when first needed |
-| Inputs (default / focus / error / disabled) | `TextField`, `NumberField`, `Select` (`fields.module.css`), `Checkbox` | Focus = teal border; error helper text follows voice & tone |
+| Inputs (default / focus / error / disabled) | `TextField`, `NumberField`, `Select` (`fields.module.css`), `Checkbox` | White field (`--surface-input`) on the warm card; focus = teal border; disabled = warm surface; error helper text follows voice & tone |
 | Status badges | not yet | Build per `reference/components/StatusBadges.md` (shape + color + label) |
 | Motion — loading | `Skeleton` | |
-| Logo | `Logo` `variant="symbol" \| "lockup"`, `size` 28/48/72/112/168 | Never recolor the violet badge; clearspace = height ÷ 2 |
+| Logo | `Logo` `variant="symbol" \| "lockup"`, `size` 28/48/72/112/168 | Official Talmar vectors; never recolor the violet dot; clearspace = height ÷ 2 |
 
 ## Reference files — read the one you need
 

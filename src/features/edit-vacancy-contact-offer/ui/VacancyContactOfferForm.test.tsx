@@ -39,12 +39,12 @@ describe('VacancyContactOfferForm', () => {
     await user.type(screen.getByLabelText('Salaris minimum'), '3000');
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
 
-    expect(await screen.findByText('Valuta is verplicht bij een ingevuld salaris.')).toBeInTheDocument();
-    expect(screen.getByText('Salarisperiode is verplicht bij een ingevuld salaris.')).toBeInTheDocument();
+    expect(await screen.findByText('Kies een valuta bij het salaris.')).toBeInTheDocument();
+    expect(screen.getByText('Kies een salarisperiode bij het salaris.')).toBeInTheDocument();
     expect(vacancyApi.patchVacancyContactOffer).not.toHaveBeenCalled();
   });
 
-  it('does not require currency/salaryPeriod when no salary field is filled in', async () => {
+  it('sends only the contact person when neither a salary nor holidays are filled in, since the API rejects an empty offer', async () => {
     const user = userEvent.setup();
     vi.mocked(vacancyApi.patchVacancyContactOffer).mockResolvedValue(vacancy);
     render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
@@ -52,7 +52,76 @@ describe('VacancyContactOfferForm', () => {
     await fillContactPerson(user);
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
 
+    await waitFor(() =>
+      expect(vacancyApi.patchVacancyContactOffer).toHaveBeenCalledWith('vacancy-1', {
+        contactPerson: { name: 'Jane Doe', email: 'jane@example.com', role: undefined, phone: undefined },
+      }),
+    );
+  });
+
+  it('rejects a salary minimum above the maximum without calling the API', async () => {
+    const user = userEvent.setup();
+    render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
+
+    await fillContactPerson(user);
+    await user.type(screen.getByLabelText('Salaris minimum'), '5000');
+    await user.type(screen.getByLabelText('Salaris maximum'), '4000');
+    await user.selectOptions(screen.getByLabelText('Valuta'), 'EUR');
+    await user.selectOptions(screen.getByLabelText('Salarisperiode'), 'MONTHLY');
+    await user.click(screen.getByRole('button', { name: 'Volgende' }));
+
+    expect(await screen.findByText('Het maximum moet minstens zo hoog zijn als het minimum.')).toBeInTheDocument();
+    expect(vacancyApi.patchVacancyContactOffer).not.toHaveBeenCalled();
+  });
+
+  it('applies the contract rules for name, phone and email before calling the API', async () => {
+    const user = userEvent.setup();
+    render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
+
+    await user.type(screen.getByLabelText('Naam'), 'Jane 123');
+    await user.type(screen.getByLabelText('Telefoon'), '12-34');
+    await user.type(screen.getByLabelText('E-mailadres'), 'jane@');
+    await user.click(screen.getByRole('button', { name: 'Volgende' }));
+
+    expect(await screen.findByText(/Vul een naam in van 2 tot 35 letters/)).toBeInTheDocument();
+    expect(screen.getByText(/Vul een telefoonnummer in van 6 tot 15 cijfers/)).toBeInTheDocument();
+    expect(screen.getByText(/Vul een geldig e-mailadres in/)).toBeInTheDocument();
+    expect(vacancyApi.patchVacancyContactOffer).not.toHaveBeenCalled();
+  });
+
+  it('accepts an international phone number with spaces and brackets', async () => {
+    const user = userEvent.setup();
+    vi.mocked(vacancyApi.patchVacancyContactOffer).mockResolvedValue(vacancy);
+    render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
+
+    await fillContactPerson(user);
+    await user.type(screen.getByLabelText('Telefoon'), '+31 (0)6 12 34 56 78');
+    await user.click(screen.getByRole('button', { name: 'Volgende' }));
+
     await waitFor(() => expect(vacancyApi.patchVacancyContactOffer).toHaveBeenCalledTimes(1));
+  });
+
+  it('shows Dutch messages for field errors the API returns, keyed by the nested field path', async () => {
+    const user = userEvent.setup();
+    vi.mocked(vacancyApi.patchVacancyContactOffer).mockRejectedValue({
+      title: 'Validation failed',
+      status: 400,
+      errors: [{ field: 'contactPerson.email', message: 'must be a well-formed email address' }],
+    });
+    render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
+
+    await fillContactPerson(user);
+    await user.click(screen.getByRole('button', { name: 'Volgende' }));
+
+    expect(await screen.findByText(/Vul een geldig e-mailadres in/)).toBeInTheDocument();
+    expect(screen.queryByText(/well-formed/)).not.toBeInTheDocument();
+  });
+
+  it('offers every currency the API accepts', () => {
+    render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
+
+    const values = Array.from(screen.getByLabelText('Valuta').querySelectorAll('option')).map((o) => o.getAttribute('value'));
+    expect(values).toEqual(expect.arrayContaining(['EUR', 'NOK', 'ISK', 'UAH']));
   });
 
   it('calls patchVacancyContactOffer with contactPerson and offer on save', async () => {
@@ -87,13 +156,14 @@ describe('VacancyContactOfferForm', () => {
     );
   });
 
-  it('hides the salary grid and clears salary fields on save when "Liever niet delen" is checked', async () => {
+  it('hides the salary grid and leaves the salary out on save when "Liever niet delen" is checked', async () => {
     const user = userEvent.setup();
     vi.mocked(vacancyApi.patchVacancyContactOffer).mockResolvedValue(vacancy);
     render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
 
     await fillContactPerson(user);
     await user.type(screen.getByLabelText('Salaris minimum'), '3000');
+    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '25');
     await user.click(screen.getByRole('checkbox', { name: 'Liever niet delen' }));
 
     expect(screen.queryByLabelText('Salaris minimum')).not.toBeInTheDocument();
@@ -103,14 +173,7 @@ describe('VacancyContactOfferForm', () => {
     await waitFor(() =>
       expect(vacancyApi.patchVacancyContactOffer).toHaveBeenCalledWith(
         'vacancy-1',
-        expect.objectContaining({
-          offer: expect.objectContaining({
-            salaryMin: null,
-            salaryMax: null,
-            currency: undefined,
-            salaryPeriod: undefined,
-          }),
-        }),
+        expect.objectContaining({ offer: { numberOfHolidays: 25 } }),
       ),
     );
   });
@@ -121,15 +184,15 @@ describe('VacancyContactOfferForm', () => {
     render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} />);
 
     await fillContactPerson(user);
-    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '5');
-    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'WEEKLY');
+    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '2');
+    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'MONTHLY');
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
 
     await waitFor(() =>
       expect(vacancyApi.patchVacancyContactOffer).toHaveBeenCalledWith(
         'vacancy-1',
         expect.objectContaining({
-          offer: expect.objectContaining({ numberOfHolidays: 260 }),
+          offer: expect.objectContaining({ numberOfHolidays: 24 }),
         }),
       ),
     );
@@ -148,12 +211,12 @@ describe('VacancyContactOfferForm', () => {
     );
 
     await fillContactPerson(user);
-    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '5');
-    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'WEEKLY');
+    await user.type(screen.getByLabelText('Aantal vakantiedagen'), '2');
+    await user.selectOptions(screen.getByLabelText('Periode vakantiedagen'), 'MONTHLY');
     await user.click(screen.getByRole('button', { name: 'Volgende' }));
 
     await waitFor(() =>
-      expect(onHolidayInputChange).toHaveBeenCalledWith({ amount: 5, period: 'WEEKLY' }),
+      expect(onHolidayInputChange).toHaveBeenCalledWith({ amount: 2, period: 'MONTHLY' }),
     );
   });
 
@@ -190,6 +253,13 @@ describe('VacancyContactOfferForm', () => {
         'We stellen je vacaturetekst op — ga jij alvast verder met contact en voorwaarden.',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('renders a calm failure banner in AI mode when the generation failed, instead of the generating one', () => {
+    render(<VacancyContactOfferForm vacancyId="vacancy-1" onSaved={vi.fn()} mode="ai" phase="failed" />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(/kon niet worden opgesteld/);
+    expect(screen.queryByText(/We stellen je vacaturetekst op/)).not.toBeInTheDocument();
   });
 
   it('renders a ready banner in AI mode when phase is ready', async () => {

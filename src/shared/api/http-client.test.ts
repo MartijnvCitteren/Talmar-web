@@ -45,7 +45,17 @@ describe('httpClient', () => {
     expect(init.headers['Content-Type']).toBe('application/json');
   });
 
-  it.each([400, 401, 403, 404, 409, 500])(
+  it('sends a plain JSON body on PATCH, which is the only type the API accepts', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(jsonResponse(200, { id: '1' })));
+
+    await httpClient.patch('/vacancy/1', { jobTitle: 'Dev' });
+
+    const [, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(init.method).toBe('PATCH');
+    expect(init.headers['Content-Type']).toBe('application/json');
+  });
+
+  it.each([400, 401, 403, 404, 409, 422, 500, 501, 503])(
     'parses a %d application/problem+json response into an ApiError',
     async (status) => {
       const problem = { title: 'Something went wrong', status, detail: 'Details here' };

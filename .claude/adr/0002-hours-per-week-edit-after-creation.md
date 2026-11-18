@@ -1,6 +1,11 @@
 # ADR-0002: Hours-per-week is not editable after vacancy creation (this pass)
 
-Status: Accepted (pragmatic workaround pending an upstream contract fix)
+Status: Superseded (2026-11-08) — the upstream contract fix landed
+
+> **Superseded.** `VacancyUpdateRequest` now exposes `minHoursPerWeek`/`maxHoursPerWeek`
+> (sent together), and the backend implements them in `PATCH /vacancy/{id}`. Step 1 now
+> sends every core field — hours and `language` included — on every save after creation,
+> and the hours fields stay editable. The rest of this record is kept for history.
 Date: 2026-09-19
 Feature: vacancy-creation (issue #4)
 

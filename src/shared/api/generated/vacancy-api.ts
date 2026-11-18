@@ -11,11 +11,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List vacancies (internal, authenticated)
+         * @description Internal owner-dashboard listing across all statuses, including `DRAFT`. This endpoint is authenticated and must never be exposed to anonymous candidates — it is not the public job board. A separate `GET /public/vacancy` (implicitly filtered to `PUBLISHED`) is deferred until the public job board is actually built.
+         *
+         *     Uses keyset/cursor pagination on `id` (UUIDv7, time-ordered), which scales better than offset pagination and is the natural fit for a time-ordered identifier.
+         */
+        get: operations["listVacancies"];
         put?: never;
         /**
          * Create a vacancy
-         * @description Creates a new vacancy in `DRAFT` status from the core section only (job title, category, location, workplace type, hours per week). Description, contact person, and offer details are added afterwards via `PATCH /vacancy/{id}`, matching the staged/AI-assisted creation flow.
+         * @description Creates a new vacancy in `DRAFT` status from the core section only (job title, category, location, workplace type, hours per week). The description is added afterwards via `POST /vacancy/{id}/description`, contact person and offer via `PATCH /vacancy/{id}`, matching the staged/AI-assisted creation flow.
          */
         post: operations["createVacancy"];
         delete?: never;
@@ -55,17 +61,11 @@ export interface paths {
             };
             cookie?: never;
         };
-        /**
-         * List vacancies (internal, authenticated)
-         * @description Internal owner-dashboard listing across all statuses, including `DRAFT`. This endpoint is authenticated and must never be exposed to anonymous candidates — it is not the public job board. A separate `GET /public/vacancy` (implicitly filtered to `PUBLISHED`) is deferred until the public job board is actually built.
-         *
-         *     Uses keyset/cursor pagination on `id` (UUIDv7, time-ordered), which scales better than offset pagination and is the natural fit for a time-ordered identifier.
-         */
-        get: operations["listVacancies"];
+        get?: never;
         put?: never;
         /**
          * Start an AI-assisted vacancy description generation
-         * @description Starts an asynchronous generation of a draft `description` (summary, job description, tasks, what we offer, about us) for an existing vacancy from a few short inputs. Generation runs against an external AI provider and is not guaranteed to complete within a single request/response cycle, so this endpoint only starts the job and returns a `generationId` immediately. Poll `GET /vacancy/{id}/generate-description/{generationId}` until `status` is `COMPLETED` (or `FAILED`) to retrieve the draft. The result is a suggestion only and is never persisted automatically — the client shows it to the user for editing and only then submits the (possibly edited) result via `PATCH /vacancy/{id}`.
+         * @description Starts an asynchronous generation of a draft `description` for an existing vacancy from a few short inputs, the vacancy's job title and its language. Only `summary`, `jobDescription` and `tasks` are generated; `whatWeOffer` and `aboutUs` are not, because there are no facts to base them on yet. Generation runs against an external AI provider and is not guaranteed to complete within a single request/response cycle, so this endpoint only starts the job and returns a `generationId` immediately. Poll `GET /vacancy/{id}/generate-description/{generationId}` until `status` is `COMPLETED` or the poll returns a problem response. The result is a suggestion only and is never persisted automatically — the client shows it to the user for editing and only then submits the (possibly edited) result via `POST /vacancy/{id}/description`. A generated draft is kept for 32 hours, then deleted.
          */
         post: operations["generateVacancyDescription"];
         delete?: never;
@@ -86,7 +86,7 @@ export interface paths {
         };
         /**
          * Poll the status of a description generation job
-         * @description Returns the current status of a description-generation job started via `POST /vacancy/{id}/generate-description`. `description` is present only once `status` is `COMPLETED`.
+         * @description Returns the current status of a description-generation job started via `POST /vacancy/{id}/generate-description`: `200` with `status` `PENDING` while the draft is being generated, `200` with `status` `COMPLETED` and the draft in `description` once it is done. A failed generation is returned as a problem response instead of a `200`: `422` when the inputs were rejected as not describing a job (retrying the same inputs will not help, the user has to change them), `500` when the generation failed on our side or did not finish within 90 seconds (starting a new generation may help), `503` when the AI provider refused the request in a way a retry will not fix (AI generation is unavailable until we fix it; the user can write the description manually). `404` when the generation or vacancy does not exist, including a generation older than 32 hours.
          */
         get: operations["getVacancyDescriptionGeneration"];
         put?: never;
@@ -119,14 +119,16 @@ export interface paths {
         head?: never;
         /**
          * Partially update a vacancy
-         * @description Applies a partial update following **JSON Merge Patch semantics (RFC 7396)**: a field present in the request body replaces the current value, a field omitted from the body is left untouched, and a field explicitly set to `null` clears it (only where the underlying field is nullable — see `Vacancy` schema). Any combination of the core fields, `description`, `contactPerson`, and `offer` may be sent in a single request; the client sends whichever section(s) it currently has.
+         * @description Partially updates a vacancy. A field present in the request body replaces the current value; a field omitted from the body, or set to `null`, is left untouched. Clearing a field is not supported. Any combination of the core fields, `description`, `contactPerson` and `offer` may be sent in a single request; the client sends whichever section(s) it currently has. A body without fields changes nothing and returns the vacancy as it is.
          *
-         *     Status is never changed through this endpoint — use the dedicated transition endpoints (`/publish`, `/fill`, `/close`) instead, since each transition has its own legality rules and side effects.
+         *     An object (`location`, `description`, `contactPerson`, `offer`) is replaced as a whole, not merged field by field: a field left out of a section that is sent is cleared. `description` follows the rules of `POST /vacancy/{id}/description`. `minHoursPerWeek` and `maxHoursPerWeek` are sent together. `offer` must contain `salaryMin`, `salaryMax` or `numberOfHolidays`; `currency` and `salaryPeriod` are required as soon as a salary is present; and `salaryMin` must not be greater than `salaryMax`. A violation is a `400` naming the field.
+         *
+         *     Status is never changed through this endpoint — use `POST /vacancy/{id}/transitions` instead, since each transition has its own legality rules and side effects.
          */
         patch: operations["updateVacancy"];
         trace?: never;
     };
-    "/vacancy/{id}/publish": {
+    "/vacancy/{id}/transitions": {
         parameters: {
             query?: never;
             header?: never;
@@ -138,54 +140,18 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Publish a vacancy (DRAFT → PUBLISHED)
-         * @description Transitions a vacancy from `DRAFT` to `PUBLISHED`. Has a real side effect: the apply-flow for this vacancy goes live. Only legal from `DRAFT`.
+         * Move a vacancy to its next status
+         * @description Applies one status transition, named by `action`:
+         *
+         *     - `PUBLISH`: `DRAFT` → `PUBLISHED`. The apply-flow for this vacancy goes live.
+         *     - `FILL`: `PUBLISHED` → `FILLED`. The vacancy was filled.
+         *     - `CLOSE`: `DRAFT` or `PUBLISHED` → `CLOSED`. The vacancy is cancelled or withdrawn
+         *       without ever being filled.
+         *
+         *
+         *     An action that is not legal from the vacancy's current status is a `409`.
          */
-        post: operations["publishVacancy"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/vacancy/{id}/fill": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["VacancyId"];
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Mark a vacancy as filled (PUBLISHED → FILLED)
-         * @description Only legal from `PUBLISHED`.
-         */
-        post: operations["fillVacancy"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/vacancy/{id}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["VacancyId"];
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Close a vacancy without a hire (cancelled/withdrawn)
-         * @description Transitions a vacancy to `CLOSED`. Represents a vacancy that is cancelled or withdrawn without ever being filled. Only legal from `DRAFT` or `PUBLISHED`.
-         */
-        post: operations["closeVacancy"];
+        post: operations["transitionVacancy"];
         delete?: never;
         options?: never;
         head?: never;
@@ -200,8 +166,16 @@ export interface components {
         VacancyId: string;
         /** Format: uuid */
         GenerationId: string;
-        /** @enum {string} */
+        /**
+         * @description `FAILED` is never returned in a `200` body: a failed generation is reported as a problem response by `GET /vacancy/{id}/generate-description/{generationId}`.
+         * @enum {string}
+         */
         VacancyDescriptionGenerationStatus: "PENDING" | "COMPLETED" | "FAILED";
+        /**
+         * @description ISO 639-1 language code of the vacancy texts, upper case like the country code.
+         * @enum {string}
+         */
+        Language: "NL" | "EN" | "DE" | "FR";
         /**
          * @description `CLOSED` represents a vacancy cancelled or withdrawn without a hire. `ARCHIVED` is set by soft delete (`DELETE /vacancy/{id}`) and is never set directly by a client.
          * @enum {string}
@@ -221,7 +195,7 @@ export interface components {
             country: string;
             city: string;
         };
-        /** @description All fields optional and populated incrementally, including via a separate, explicit AI-generation endpoint (out of scope for this version) whose suggestions are shown to the user for editing and only then submitted here — never generated synchronously inside this request. */
+        /** @description All fields optional and populated incrementally. A draft from the separate, explicit AI-generation endpoint (`POST /vacancy/{id}/generate-description`) is shown to the user for editing and only then submitted via `POST /vacancy/{id}/description` — never generated synchronously inside that request. */
         VacancyDescriptionResponse: {
             summary?: string;
             jobDescription?: string;
@@ -229,19 +203,46 @@ export interface components {
             whatWeOffer?: string;
             aboutUs?: string;
         };
+        /**
+         * @description The person candidates can contact about the vacancy. `phone` is returned normalised: digits only, with a leading `+` for an international number (`+31 (0)6 12 34 56 78` becomes `+31612345678`, `0031 6-12345678` too).
+         * @example {
+         *       "name": "Sanne de Vries",
+         *       "role": "Hiring manager",
+         *       "phone": "+31 (0)6 12 34 56 78",
+         *       "email": "sanne.devries@acme.nl"
+         *     }
+         */
         ContactPerson: {
+            /** @description Full name. Letters, spaces, apostrophes, dots and hyphens only. */
             name: string;
+            /** @description Job title of the contact person, e.g. `Hiring manager`. */
             role?: string;
+            /** @description 6 to 15 digits, optionally with a leading `+` and spaces, brackets, dots, slashes or hyphens between them. */
             phone?: string;
             /** Format: email */
             email: string;
         };
-        /** @description `currency` and `salaryPeriod` are required as soon as either `salaryMin` or `salaryMax` is present, given the EU multi-country target market. Not enforced at the schema level (kept as a plain object for codegen compatibility) — enforce this rule in the application layer. */
+        /**
+         * @description ISO 4217 code of a currency used in Europe: the EU (euro and the national currencies of member states outside the euro area), and the other European countries Talmar serves.
+         * @enum {string}
+         */
+        CurrencyCode: "EUR" | "CZK" | "DKK" | "HUF" | "PLN" | "RON" | "SEK" | "GBP" | "CHF" | "NOK" | "ISK" | "ALL" | "BAM" | "MKD" | "MDL" | "RSD" | "UAH";
+        /**
+         * @description At least one of `salaryMin`, `salaryMax` and `numberOfHolidays` is present. `currency` and `salaryPeriod` are required as soon as either `salaryMin` or `salaryMax` is present, given the EU multi-country target market, and `salaryMin` is not greater than `salaryMax`. Not expressed in the schema (kept as a plain object for codegen compatibility); the API rejects a violation with `400`.
+         * @example {
+         *       "salaryMin": 3800.75,
+         *       "salaryMax": 4601.92,
+         *       "currency": "EUR",
+         *       "salaryPeriod": "MONTHLY",
+         *       "numberOfHolidays": 25
+         *     }
+         */
         Offer: {
+            /** @description Gross salary in `currency` per `salaryPeriod`. Decimals are allowed; the amount is rounded half up to 2 decimals (`10.745` becomes `10.75`, `10.744` becomes `10.74`) and always returned with 2 decimals. */
             salaryMin?: number | null;
+            /** @description Gross salary in `currency` per `salaryPeriod`. Decimals are allowed; the amount is rounded half up to 2 decimals (`10.745` becomes `10.75`, `10.744` becomes `10.74`) and always returned with 2 decimals. */
             salaryMax?: number | null;
-            /** @description ISO 4217 currency code. */
-            currency?: string;
+            currency?: components["schemas"]["CurrencyCode"];
             salaryPeriod?: components["schemas"]["SalaryPeriod"];
             /** @description Full-time-equivalent holiday days. Never pre-computed/prorated server-side. */
             numberOfHolidays?: number | null;
@@ -250,6 +251,7 @@ export interface components {
             id: components["schemas"]["VacancyId"];
             status: components["schemas"]["VacancyStatus"];
             jobTitle: string;
+            language: components["schemas"]["Language"];
             category: components["schemas"]["VacancyCategory"];
             location: components["schemas"]["Location"];
             workplaceType: components["schemas"]["WorkplaceType"];
@@ -273,6 +275,7 @@ export interface components {
         /** @description Minimum fields to create a vacancy in `DRAFT` status. No `id` — the resource is identified by the URL. */
         VacancyCoreRequest: {
             jobTitle: string;
+            language: components["schemas"]["Language"];
             category: components["schemas"]["VacancyCategory"];
             location: components["schemas"]["Location"];
             workplaceType: components["schemas"]["WorkplaceType"];
@@ -280,13 +283,13 @@ export interface components {
             maxHoursPerWeek: number;
         };
         VacancyDescriptionRequest: components["schemas"]["VacancyDescriptionResponse"];
-        /** @description Status of an asynchronous description-generation job started via `POST /vacancy/{id}/generate-description`. `description` is populated only once `status` is `COMPLETED`; absent while `PENDING`, and absent (with the failure detail returned instead as a problem response) if `FAILED`. */
+        /** @description Status of an asynchronous description-generation job started via `POST /vacancy/{id}/generate-description`. `description` is populated only once `status` is `COMPLETED` and then carries only the generated fields (`summary`, `jobDescription`, `tasks`); it is absent while `PENDING`. A `FAILED` generation is returned as a problem response instead. */
         VacancyDescriptionGeneration: {
             generationId: components["schemas"]["GenerationId"];
             status: components["schemas"]["VacancyDescriptionGenerationStatus"];
             description?: components["schemas"]["VacancyDescriptionResponse"];
         };
-        /** @description Short inputs used to generate an AI-assisted `description` draft for an existing vacancy (`POST /vacancy/{id}/generate-description`). The result is a suggestion only, shown to the user for editing before being submitted via `PATCH /vacancy/{id}`. */
+        /** @description Short inputs used to generate an AI-assisted `description` draft for an existing vacancy (`POST /vacancy/{id}/generate-description`). The result is a suggestion only, shown to the user for editing before being submitted via `POST /vacancy/{id}/description`. Raw HTML, script-like tags and control characters other than newline, carriage return and tab are rejected with `400`. */
         GenerateVacancyDescriptionRequest: {
             /** @description The most important day-to-day tasks for this role. */
             mostImportantTasks: string;
@@ -295,18 +298,46 @@ export interface components {
             /** @description Why this is a compelling job to candidates. */
             whyNiceJob: string;
         };
-        /** @description Contact person and offer details, captured together as they are entered in the same FE stage. No `id`. Not referenced directly by `PATCH /vacancy/{id}` — `VacancyUpdateRequest` exposes `contactPerson` and `offer` as independent optional sections instead, per JSON Merge Patch semantics — but documents the shape of that combined FE-stage payload. */
-        VacancyOfferRequest: {
-            contactPerson: components["schemas"]["ContactPerson"];
-            offer: components["schemas"]["Offer"];
+        /**
+         * @description The status transition to apply. `PUBLISH`: `DRAFT` → `PUBLISHED`. `FILL`: `PUBLISHED` → `FILLED`. `CLOSE`: `DRAFT` or `PUBLISHED` → `CLOSED`.
+         * @enum {string}
+         */
+        VacancyTransitionAction: "PUBLISH" | "FILL" | "CLOSE";
+        /**
+         * @description Body of `POST /vacancy/{id}/transitions`.
+         * @example {
+         *       "action": "PUBLISH"
+         *     }
+         */
+        VacancyTransitionRequest: {
+            action: components["schemas"]["VacancyTransitionAction"];
         };
-        /** @description JSON Merge Patch (RFC 7396) body for `PATCH /vacancy/{id}`. Every section is optional and independent — send only the section(s) you have. No `id` field; the resource is identified by the URL path. */
+        /**
+         * @description Body for `PATCH /vacancy/{id}`. Every section is optional and independent — send only the section(s) you have; an omitted or `null` field is left untouched. No `id` field; the resource is identified by the URL path.
+         * @example {
+         *       "jobTitle": "Senior Sales Manager",
+         *       "workplaceType": "HYBRID",
+         *       "minHoursPerWeek": 32,
+         *       "maxHoursPerWeek": 40,
+         *       "offer": {
+         *         "salaryMin": 4200,
+         *         "salaryMax": 5000,
+         *         "currency": "EUR",
+         *         "salaryPeriod": "MONTHLY",
+         *         "numberOfHolidays": 25
+         *       }
+         *     }
+         */
         VacancyUpdateRequest: {
             jobTitle?: string;
+            language?: components["schemas"]["Language"];
             category?: components["schemas"]["VacancyCategory"];
             location?: components["schemas"]["Location"];
             workplaceType?: components["schemas"]["WorkplaceType"];
-            hoursPerWeek?: number;
+            /** @description Sent together with `maxHoursPerWeek`. */
+            minHoursPerWeek?: number;
+            /** @description Sent together with `minHoursPerWeek`. */
+            maxHoursPerWeek?: number;
             description?: components["schemas"]["VacancyDescriptionRequest"];
             contactPerson?: components["schemas"]["ContactPerson"];
             offer?: components["schemas"]["Offer"];
@@ -383,8 +414,46 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetails"];
             };
         };
+        /** @description The vacancy was changed by someone else while this request was processed. Reload it and make the change again. */
+        ConcurrentModification: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description The request was well-formed, but its content cannot be processed; changing the input is needed before retrying. */
+        UnprocessableContent: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description The request body has a `Content-Type` this operation does not accept, or none at all. The `Accept` header lists the content types it does accept; send the body again with one of them. Nothing has changed. */
+        UnsupportedMediaType: {
+            headers: {
+                /** @description The content types this operation accepts for its request body. */
+                Accept?: string;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
         /** @description An unexpected error occurred while processing the request. */
         InternalServerError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description A service the request depends on is unavailable; retrying right away will not help. */
+        ServiceUnavailable: {
             headers: {
                 [name: string]: unknown;
             };
@@ -425,6 +494,53 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listVacancies: {
+        parameters: {
+            query?: {
+                /** @description Partial, case-insensitive match on job title (`ILIKE`-style). */
+                jobTitle?: components["parameters"]["JobTitleFilter"];
+                /** @description Filter by one or more statuses. */
+                status?: components["parameters"]["StatusFilter"];
+                /** @description Filter by one or more categories. */
+                category?: components["parameters"]["CategoryFilter"];
+                /** @description Include vacancies created on or after this date. */
+                createdFrom?: components["parameters"]["CreatedFrom"];
+                /** @description Include vacancies created on or before this date. */
+                createdTo?: components["parameters"]["CreatedTo"];
+                /** @description Minimum number of days the vacancy has been open, derived from `publishedAt` at query time (not a stored field). */
+                openDaysMin?: components["parameters"]["OpenDaysMin"];
+                /** @description Maximum number of days the vacancy has been open, derived from `publishedAt` at query time (not a stored field). */
+                openDaysMax?: components["parameters"]["OpenDaysMax"];
+                /** @description Free-text match on `contactPerson.name`. */
+                contactPersonName?: components["parameters"]["ContactPersonName"];
+                sortBy?: components["parameters"]["SortBy"];
+                sortDir?: components["parameters"]["SortDir"];
+                /** @description Opaque keyset-pagination cursor from a previous response's `nextCursor`. Omit to fetch the first page. */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Maximum number of items to return. */
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page of vacancies matching the filters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VacancyListResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     createVacancy: {
         parameters: {
             query?: never;
@@ -452,6 +568,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            415: components["responses"]["UnsupportedMediaType"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -483,55 +600,8 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    listVacancies: {
-        parameters: {
-            query?: {
-                /** @description Partial, case-insensitive match on job title (`ILIKE`-style). */
-                jobTitle?: components["parameters"]["JobTitleFilter"];
-                /** @description Filter by one or more statuses. */
-                status?: components["parameters"]["StatusFilter"];
-                /** @description Filter by one or more categories. */
-                category?: components["parameters"]["CategoryFilter"];
-                /** @description Include vacancies created on or after this date. */
-                createdFrom?: components["parameters"]["CreatedFrom"];
-                /** @description Include vacancies created on or before this date. */
-                createdTo?: components["parameters"]["CreatedTo"];
-                /** @description Minimum number of days the vacancy has been open, derived from `publishedAt` at query time (not a stored field). */
-                openDaysMin?: components["parameters"]["OpenDaysMin"];
-                /** @description Maximum number of days the vacancy has been open, derived from `publishedAt` at query time (not a stored field). */
-                openDaysMax?: components["parameters"]["OpenDaysMax"];
-                /** @description Free-text match on `contactPerson.name`. */
-                contactPersonName?: components["parameters"]["ContactPersonName"];
-                sortBy?: components["parameters"]["SortBy"];
-                sortDir?: components["parameters"]["SortDir"];
-                /** @description Opaque keyset-pagination cursor from a previous response's `nextCursor`. Omit to fetch the first page. */
-                cursor?: components["parameters"]["Cursor"];
-                /** @description Maximum number of items to return. */
-                limit?: components["parameters"]["Limit"];
-            };
-            header?: never;
-            path: {
-                id: components["parameters"]["VacancyId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Page of vacancies matching the filters. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VacancyListResponse"];
-                };
-            };
-            400: components["responses"]["BadRequest"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
+            409: components["responses"]["ConcurrentModification"];
+            415: components["responses"]["UnsupportedMediaType"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -565,6 +635,7 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            415: components["responses"]["UnsupportedMediaType"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -580,7 +651,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Current generation status. */
+            /** @description Current generation status, `PENDING` or `COMPLETED`. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -593,7 +664,9 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableContent"];
             500: components["responses"]["InternalServerError"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     getVacancy: {
@@ -659,7 +732,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/merge-patch+json": components["schemas"]["VacancyUpdateRequest"];
+                "application/json": components["schemas"]["VacancyUpdateRequest"];
             };
         };
         responses: {
@@ -676,10 +749,12 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["ConcurrentModification"];
+            415: components["responses"]["UnsupportedMediaType"];
             500: components["responses"]["InternalServerError"];
         };
     };
-    publishVacancy: {
+    transitionVacancy: {
         parameters: {
             query?: never;
             header?: never;
@@ -688,9 +763,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VacancyTransitionRequest"];
+            };
+        };
         responses: {
-            /** @description Vacancy published. */
+            /** @description The vacancy in its new status. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -704,62 +783,7 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    fillVacancy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["VacancyId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Vacancy marked as filled. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VacancyResponse"];
-                };
-            };
-            400: components["responses"]["BadRequest"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    closeVacancy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["VacancyId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Vacancy closed. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VacancyResponse"];
-                };
-            };
-            400: components["responses"]["BadRequest"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
+            415: components["responses"]["UnsupportedMediaType"];
             500: components["responses"]["InternalServerError"];
         };
     };
