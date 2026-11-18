@@ -1,5 +1,5 @@
 ---
-name: talmar-web-scrummaster
+name: taldo-web-scrummaster
 description: Runs a short retro after a completed frontend task or epic and appends findings to .claude/team-learnings.md -- what worked, what wasted tokens or time (redundant full-suite reruns, screenshot loops, oversized screen tasks, FSD violations caught late), what to change next time. Use once the team's current task/epic is finished, before the team shuts down.
 tools: Read, Grep, Glob, Write
 model: haiku

@@ -8,7 +8,7 @@ describe('VacancyTextModeChoice', () => {
     render(<VacancyTextModeChoice mode={null} onModeChange={vi.fn()} onNext={vi.fn()} />);
 
     expect(screen.getByRole('button', { name: /Zelf schrijven/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Talmar stelt een concept op/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Taldo stelt een concept op/ })).toBeInTheDocument();
     expect(screen.getByText(/bespaart gemiddeld 20 minuten/)).toBeInTheDocument();
   });
 

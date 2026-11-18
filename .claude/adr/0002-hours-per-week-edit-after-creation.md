@@ -35,7 +35,7 @@ request body that changes its hours-per-week. `jobTitle`, `category`, `location`
   `jobTitle`/`category`/`location`/`workplaceType` — hours are excluded at the type
   level, not just by UI convention, so a future developer can't accidentally wire them
   through a PATCH call that the contract can't actually satisfy.
-- File the contract bug upstream against `talmar-contracts` (add
+- File the contract bug upstream against `taldo-contracts` (add
   `minHoursPerWeek`/`maxHoursPerWeek` to `VacancyUpdateRequest`, drop the phantom
   `hoursPerWeek` from all three `required` arrays) — cross-team dependency, not
   fixable from this repo.

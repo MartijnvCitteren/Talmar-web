@@ -1,9 +1,9 @@
 ---
-name: talmar-design-system
-description: Talmar's design system (colors, type, spacing, radius, motion, components, iconography, voice & tone). Use for any UI work in this repo — writing or reviewing CSS modules, building or changing shared/ui components, choosing icons, or writing user-facing copy (labels, errors, empty states).
+name: taldo-design-system
+description: Taldo's design system (colors, type, spacing, radius, motion, components, iconography, voice & tone). Use for any UI work in this repo — writing or reviewing CSS modules, building or changing shared/ui components, choosing icons, or writing user-facing copy (labels, errors, empty states).
 ---
 
-# Talmar Design System
+# Taldo Design System
 
 Source of truth: the design system artifact on claude.ai —
 https://claude.ai/artifact/S2ACsWNfY7U7Mg6WQuMeZW. The files under `reference/` are a
@@ -11,8 +11,8 @@ verbatim snapshot of it (last checked 2026-10-18). If the artifact changes, re-s
 `reference/` and `src/app/styles/tokens.css` together.
 
 The artifact predates the rename and is still titled "Jobzy - Design System", so the
-snapshot says "Jobzy" and `jobzy-*.svg`. Read that as Talmar: the product name in UI copy
-is "Talmar" and the logo files are `talmar-*.svg`.
+snapshot says "Jobzy" and `jobzy-*.svg`. Read that as Taldo: the product name in UI copy
+is "Taldo" and the logo files are `taldo-*.svg`.
 
 ## Where the design system lives in code
 
@@ -21,11 +21,11 @@ is "Talmar" and the logo files are `talmar-*.svg`.
   in `src/app/boot.tsx`. Matches `reference/tokens.json` 1:1.
 - **Components:** `src/shared/ui` (exported via `src/shared/ui/index.ts`).
 - **Logo:** in the UI always `<Logo />` / `<Logo variant="lockup" />` from `shared/ui` — never
-  an `<img>` of the SVGs. The component is drawn from the official Talmar vectors in
-  `design/talmar-logo/svg` (next to this repo): the "t"-with-dot icon on a green tile, and
+  an `<img>` of the SVGs. The component is drawn from the official Taldo vectors in
+  `design/taldo-logo/svg` (next to this repo): the "t"-with-dot icon on a green tile, and
   the wordmark as outlined paths. Its colors are the `--logo-*` tokens, the exact values of
-  those files. `public/branding/talmar-symbol.svg` (= `talmar-icon.svg`),
-  `talmar-lockup.svg`, `talmar-icon-180.png` and `public/favicon.ico` are copies of the
+  those files. `public/branding/taldo-symbol.svg` (= `taldo-icon.svg`),
+  `taldo-lockup.svg`, `taldo-icon-180.png` and `public/favicon.ico` are copies of the
   official files, used for the favicon only. The old reconstructed Jobzy mark (square hub
   with a signal badge) is gone; `reference/components/Logo.md` still describes it.
 - **Icons:** `lucide-react`.
@@ -70,7 +70,7 @@ is "Talmar" and the logo files are `talmar-*.svg`.
 | Inputs (default / focus / error / disabled) | `TextField`, `NumberField`, `Select` (`fields.module.css`), `Checkbox` | White field (`--surface-input`) on the warm card; focus = teal border; disabled = warm surface; error helper text follows voice & tone |
 | Status badges | not yet | Build per `reference/components/StatusBadges.md` (shape + color + label) |
 | Motion — loading | `Skeleton` | |
-| Logo | `Logo` `variant="symbol" \| "lockup"`, `size` 28/48/72/112/168 | Official Talmar vectors; never recolor the violet dot; clearspace = height ÷ 2 |
+| Logo | `Logo` `variant="symbol" \| "lockup"`, `size` 28/48/72/112/168 | Official Taldo vectors; never recolor the violet dot; clearspace = height ÷ 2 |
 
 ## Reference files — read the one you need
 

@@ -3,7 +3,7 @@
 Running list of things a human should confirm later. Append new entries under a dated
 heading rather than editing history away.
 
-## 2026-09-19 — architect pass (talmar-web-architect)
+## 2026-09-19 — architect pass (taldo-web-architect)
 
 1. **Contract bug: `VacancyUpdateRequest` cannot carry hours-per-week.**
    `PATCH /vacancy/{id}` only has a `hoursPerWeek` field that doesn't exist as a real
@@ -12,7 +12,7 @@ heading rather than editing history away.
    field also appears in those two schemas' `required` arrays without a matching
    property. Worked around in this pass per `.claude/adr/0002-hours-per-week-edit-after-creation.md`
    (hours become read-only once a vacancy exists). **Needs a human to raise this with
-   the backend/`talmar-contracts` team** — it's a cross-team fix, not something the FE
+   the backend/`taldo-contracts` team** — it's a cross-team fix, not something the FE
    can resolve unilaterally, and it currently caps what Step 1 re-editing can do.
 
 2. **`SalaryPeriod` enum mismatch with the design.** The design (both the original
@@ -60,10 +60,10 @@ heading rather than editing history away.
    on when/how auth actually lands (token storage mechanism, login flow) before any
    endpoint requiring a real bearer token can be exercised against a real backend beyond
    local mocking — every endpoint in `specs/vacancy.yml` requires `bearerAuth`, so this
-   will block real (non-mocked) local testing against an actual `talmar-api`
+   will block real (non-mocked) local testing against an actual `taldo-api`
    instance, not just this UI's own logic.
 
-## 2026-09-19 — reviewer pass (talmar-web-reviewer)
+## 2026-09-19 — reviewer pass (taldo-web-reviewer)
 
 8. **Currency dropdown narrows the contract.** `Offer.currency` is a free-text
    ISO-4217-pattern field in `specs/vacancy.yml` (`pattern: '^[A-Z]{3}$'`), not an enum.
@@ -83,7 +83,7 @@ heading rather than editing history away.
    nog niet compleet — controleer hem even.") — **this nitpick now has a concrete,
    design-sourced fix**, folded into T026's rework rather than left as a follow-up.
 
-## 2026-09-20 — architect pass, design-parity revision (talmar-web-architect)
+## 2026-09-20 — architect pass, design-parity revision (taldo-web-architect)
 
 Full context: `specs/plan.md` §10, `specs/design-notes.md` (now the verified capture).
 New questions raised by reading the real, high-fidelity handoff in full:
@@ -135,7 +135,7 @@ New questions raised by reading the real, high-fidelity handoff in full:
     the swap as a pre-ship follow-up. **Needs a human with access to the real brand
     asset files** before this ships externally.
 
-## 2026-09-25 — architect pass, fine-tuning (talmar-web-architect)
+## 2026-09-25 — architect pass, fine-tuning (taldo-web-architect)
 
 Full context: `specs/plan.md` §11, PO browser-test feedback on PR #5.
 
@@ -149,7 +149,7 @@ Full context: `specs/plan.md` §11, PO browser-test feedback on PR #5.
     `numberOfHolidays`; the chosen period + raw entered number are kept in page-local
     state (not persisted) so Overzicht/Preview can redisplay what the user actually
     entered within the same session. **Needs a human to raise this with the
-    backend/`talmar-contracts` team**: add a `holidayPeriod` field to `Offer` (same shape
+    backend/`taldo-contracts` team**: add a `holidayPeriod` field to `Offer` (same shape
     as `SalaryPeriod`, e.g. `WEEKLY | MONTHLY | ANNUAL`) so the chosen period survives a
     backend round-trip — currently it does not (a page reload or a future "resume an
     existing draft" flow would only ever see the converted annual number). Not blocking

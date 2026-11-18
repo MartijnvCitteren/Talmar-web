@@ -73,7 +73,7 @@ export const languageOptions = (Object.keys(languageLabels) as Language[]).map((
 }));
 
 /**
- * Every currency the API accepts (`CurrencyCode`), euro first, then by how often Talmar's
+ * Every currency the API accepts (`CurrencyCode`), euro first, then by how often Taldo's
  * markets use them. Shown as the ISO code, which is how recruiters know them.
  */
 export const currencyCodes: CurrencyCode[] = [

@@ -1,5 +1,5 @@
 /**
- * Guards the Talmar design system (.claude/skills/talmar-design-system): CSS modules may only
+ * Guards the Taldo design system (.claude/skills/taldo-design-system): CSS modules may only
  * use design tokens from src/app/styles/tokens.css for color, type, spacing, radius and
  * motion. A value that has no token yet gets a new token in tokens.css, not a literal here.
  *

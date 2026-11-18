@@ -1,8 +1,8 @@
 openapi: 3.1.1
 info:
-  title: Talmar Vacancy API
+  title: Taldo Vacancy API
   description: >
-    API for managing vacancies in Talmar. This endpoint covers creating (partially AI generated) vacancies, publishing, 
+    API for managing vacancies in Taldo. This endpoint covers creating (partially AI generated) vacancies, publishing, 
     updating and fetching vacancies.
   version: 1.0.0
 servers:
@@ -617,7 +617,7 @@ components:
     VacancyCategory:
       type: string
       description: >
-        Internal Talmar job-function taxonomy.
+        Internal Taldo job-function taxonomy.
       enum:
         - ADMINISTRATION
         - CONSTRUCTION
@@ -725,7 +725,7 @@ components:
       type: string
       description: >
         ISO 4217 code of a currency used in Europe: the EU (euro and the national currencies of
-        member states outside the euro area), and the other European countries Talmar serves.
+        member states outside the euro area), and the other European countries Taldo serves.
       enum: [EUR, CZK, DKK, HUF, PLN, RON, SEK, GBP, CHF, NOK, ISK, ALL, BAM, MKD, MDL, RSD, UAH]
 
     Offer:

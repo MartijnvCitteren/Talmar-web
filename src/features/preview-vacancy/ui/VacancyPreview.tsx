@@ -28,7 +28,7 @@ export function VacancyPreview({ vacancy, description, onBack, onSaveDraft, onRe
         <div className={styles.header}>
           <div className={styles.eyebrow}>
             <Logo />
-            Geplaatst via Talmar
+            Geplaatst via Taldo
           </div>
           <div className={styles.jobTitle}>{vacancy.jobTitle}</div>
           <div className={styles.chips}>
