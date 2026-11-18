@@ -6,14 +6,14 @@ import styles from './Logo.module.css';
 export type LogoSize = 28 | 48 | 72 | 112 | 168;
 
 export interface LogoProps {
-  /** `symbol` is the app icon alone; `lockup` pairs it with the "Talmar" wordmark. */
+  /** `symbol` is the app icon alone; `lockup` pairs it with the "Taldo" wordmark. */
   variant?: 'symbol' | 'lockup';
   /** Height of the icon; the lockup is as high as the icon and grows to the right. */
   size?: LogoSize;
   className?: string;
 }
 
-/** The official Talmar icon (`design/talmar-logo/svg/talmar-icon.svg`): a "t" with a dot on a tile. */
+/** The official Taldo icon (`design/taldo-logo/svg/taldo-icon.svg`): a "t" with a dot on a tile. */
 function Icon() {
   return (
     <>
@@ -27,7 +27,7 @@ function Icon() {
 }
 
 /**
- * Talmar logo, drawn inline from the official vectors rather than via <img>, so its colors come
+ * Taldo logo, drawn inline from the official vectors rather than via <img>, so its colors come
  * from the design tokens and the wordmark (outlined paths) never waits on a webfont.
  */
 export function Logo({ variant = 'symbol', size = 28, className }: LogoProps) {
@@ -39,7 +39,7 @@ export function Logo({ variant = 'symbol', size = 28, className }: LogoProps) {
       className={[styles.logo, className].filter(Boolean).join(' ')}
       style={style}
       role="img"
-      aria-label="Talmar"
+      aria-label="Taldo"
     >
       <svg
         className={isLockup ? styles.lockup : styles.symbol}

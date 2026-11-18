@@ -269,7 +269,7 @@ describe('VacancyCreatePage', () => {
     expect(await screen.findByLabelText('Samenvatting')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Terug naar tekstkeuze' }));
 
-    expect(await screen.findByRole('button', { name: /Talmar stelt een concept op/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Taldo stelt een concept op/ })).toBeInTheDocument();
   });
 
   it('threads the entered vakantiedagen amount/period through to Overzicht instead of the converted annual figure', async () => {
@@ -363,7 +363,7 @@ describe('VacancyCreatePage', () => {
     await completeStep1(user);
 
     expect(await screen.findByRole('heading', { name: 'Vacaturetekst' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Talmar stelt een concept op/ }));
+    await user.click(screen.getByRole('button', { name: /Taldo stelt een concept op/ }));
     await user.click(screen.getByRole('button', { name: 'Beantwoord 3 vragen' }));
 
     expect(await screen.findByRole('dialog', { name: 'Drie korte vragen' })).toBeInTheDocument();

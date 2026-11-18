@@ -133,7 +133,7 @@
   --nav-active-bg: var(--status-passed-bg);
   --nav-active-fg: var(--teal);
 
-  /* Logo — exact colors of the official logo files (design/talmar-logo); never recolor. */
+  /* Logo — exact colors of the official logo files (design/taldo-logo); never recolor. */
   --logo-tile: #006855;
   --logo-glyph: #fbfaf7;
   --logo-dot: #724aab;

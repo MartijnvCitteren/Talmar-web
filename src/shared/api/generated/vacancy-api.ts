@@ -182,7 +182,7 @@ export interface components {
          */
         VacancyStatus: "DRAFT" | "PUBLISHED" | "FILLED" | "CLOSED" | "ARCHIVED";
         /**
-         * @description Internal Talmar job-function taxonomy.
+         * @description Internal Taldo job-function taxonomy.
          * @enum {string}
          */
         VacancyCategory: "ADMINISTRATION" | "CONSTRUCTION" | "CUSTOMER_SUPPORT" | "DESIGN_CREATIVE" | "EDUCATION" | "ENGINEERING" | "FACILITY_SERVICES" | "FINANCE" | "HEALTHCARE" | "HOSPITALITY" | "HUMAN_RESOURCES" | "LEGAL" | "LOGISTICS_SUPPLY_CHAIN" | "MANAGEMENT" | "MARKETING" | "OPERATIONS" | "PRODUCTION_MANUFACTURING" | "RETAIL" | "SALES" | "SCIENCE_RESEARCH" | "OTHER";
@@ -223,7 +223,7 @@ export interface components {
             email: string;
         };
         /**
-         * @description ISO 4217 code of a currency used in Europe: the EU (euro and the national currencies of member states outside the euro area), and the other European countries Talmar serves.
+         * @description ISO 4217 code of a currency used in Europe: the EU (euro and the national currencies of member states outside the euro area), and the other European countries Taldo serves.
          * @enum {string}
          */
         CurrencyCode: "EUR" | "CZK" | "DKK" | "HUF" | "PLN" | "RON" | "SEK" | "GBP" | "CHF" | "NOK" | "ISK" | "ALL" | "BAM" | "MKD" | "MDL" | "RSD" | "UAH";

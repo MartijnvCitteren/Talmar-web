@@ -11,10 +11,10 @@ describe('Logo', () => {
       </>,
     );
 
-    expect(screen.getAllByRole('img', { name: 'Talmar' })).toHaveLength(2);
+    expect(screen.getAllByRole('img', { name: 'Taldo' })).toHaveLength(2);
   });
 
-  it('draws the official Talmar icon: a "t" with a dot on a rounded tile', () => {
+  it('draws the official Taldo icon: a "t" with a dot on a rounded tile', () => {
     const { container } = render(<Logo />);
 
     expect(container.querySelector('rect[rx="29"]')).not.toBeNull();
@@ -33,6 +33,6 @@ describe('Logo', () => {
 
   it('sizes the icon from the design-system size scale', () => {
     render(<Logo size={48} />);
-    expect(screen.getByRole('img', { name: 'Talmar' })).toHaveStyle({ '--logo-size': '48px' });
+    expect(screen.getByRole('img', { name: 'Taldo' })).toHaveStyle({ '--logo-size': '48px' });
   });
 });

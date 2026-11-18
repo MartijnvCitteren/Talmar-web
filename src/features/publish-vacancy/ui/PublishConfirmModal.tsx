@@ -26,7 +26,7 @@ export function PublishConfirmModal({ open, vacancyId, vacancyTitle, onClose, on
   return (
     <Modal open={open} onClose={onClose} title="Vacature publiceren?" maxWidth={440}>
       <p>
-        &ldquo;{vacancyTitle}&rdquo; gaat live op je Talmar-pagina en de gekoppelde kanalen. Je kunt de
+        &ldquo;{vacancyTitle}&rdquo; gaat live op je Taldo-pagina en de gekoppelde kanalen. Je kunt de
         vacature daarna nog aanpassen of pauzeren.
       </p>
       <ErrorBanner message={error} />
