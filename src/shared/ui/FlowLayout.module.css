@@ -1,0 +1,74 @@
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-page);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.body {
+  width: 100%;
+  max-width: var(--form-max);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-3) var(--space-5);
+}
+
+.progress {
+  margin-bottom: var(--space-4);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.footer {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  font-size: var(--text-ui-size);
+}
+
+@media (min-width: 640px) {
+  .header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .body {
+    padding-top: var(--space-5);
+  }
+}
+
+/* Wide: the steps sit in a column left of the task, which keeps its form width. */
+@media (min-width: 1024px) {
+  .body[data-has-progress='true'] {
+    --progress-column: calc(var(--space-6) * 4);
+
+    display: grid;
+    grid-template-columns: var(--progress-column) minmax(0, var(--form-max));
+    justify-content: center;
+    column-gap: var(--space-6);
+    max-width: var(--content-max);
+    padding-top: var(--space-6);
+  }
+
+  .body[data-has-progress='true'] .progress {
+    position: sticky;
+    top: var(--space-5);
+    align-self: start;
+    margin-bottom: 0;
+    padding-top: var(--space-1);
+  }
+
+  .body:not([data-has-progress='true']) {
+    padding-top: var(--space-6);
+  }
+}

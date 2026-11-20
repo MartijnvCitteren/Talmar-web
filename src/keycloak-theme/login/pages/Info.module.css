@@ -1,0 +1,25 @@
+.actions {
+  margin: 0;
+  padding-left: var(--space-3);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* The primary button's look (shared/ui Button) on a link. */
+.button {
+  display: block;
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid var(--action-primary);
+  border-radius: var(--radius-control);
+  background: var(--action-primary);
+  color: var(--action-primary-text);
+  font-size: var(--text-control-size);
+  font-weight: var(--text-control-weight);
+  text-align: center;
+  text-decoration: none;
+  transition: var(--transition-hover);
+}
+
+.button:hover {
+  border-color: var(--action-primary-hover);
+  background: var(--action-primary-hover);
+}

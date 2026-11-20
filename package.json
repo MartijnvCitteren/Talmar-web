@@ -13,7 +13,7 @@
     "lint:css": "stylelint \"src/**/*.module.css\"",
     "steiger": "steiger ./src",
     "e2e": "playwright test",
-    "generate:api": "openapi-typescript specs/vacancy.yml -o src/shared/api/generated/vacancy-api.ts",
+    "generate:api": "openapi-typescript specs/vacancy.yml -o src/shared/api/generated/vacancy-api.ts && openapi-typescript specs/identity.yml -o src/shared/api/generated/identity-api.ts",
     "storybook": "storybook dev -p 6006",
     "build-keycloak-theme": "npm run build && keycloakify build"
   },

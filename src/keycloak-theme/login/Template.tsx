@@ -2,24 +2,23 @@ import { useEffect, type ReactNode } from 'react';
 import type { TemplateProps } from 'keycloakify/login/TemplateProps';
 import { useInitialize } from 'keycloakify/login/Template.useInitialize';
 import { kcSanitize } from 'keycloakify/lib/kcSanitize';
-import { ErrorBanner, Logo } from '../../shared/ui';
+import { ErrorBanner, FlowLayout, ProgressRail } from '../../shared/ui';
 import type { I18n } from './i18n';
 import type { KcContext } from './KcContext';
+import { signupSteps, type SignupStep } from './signupSteps';
 import styles from './Template.module.css';
 
 export type TaldoTemplateProps = TemplateProps<KcContext, I18n> & {
-  /** Left of the header bar; defaults to the Taldo lockup. */
-  headerStart?: ReactNode;
-  /** Right of the header bar, e.g. a step counter. */
-  headerEnd?: ReactNode;
-  /** Below the card's content, e.g. the link back to login. */
+  /** The sign-up step this page is, if it is part of sign-up: shows the steps next to the page. */
+  signupStep?: SignupStep;
+  /** Below the page, e.g. the link back to login. */
   footer?: ReactNode;
 };
 
 /**
- * The Taldo shell for Keycloak pages: one card with a header bar, the global message and the
- * page. Pages that are ejected into this theme (register now; login and reset-password next)
- * render inside it. Pages that aren't ejected use Keycloakify's own Template (see KcPage).
+ * The Taldo shell for Keycloak pages: logo and language links on top, the global message and
+ * the page in one column, and the sign-up steps next to it on sign-up pages. Pages that aren't
+ * ejected use Keycloakify's own Template instead (see KcPage).
  */
 export default function Template({
   displayMessage = true,
@@ -28,8 +27,7 @@ export default function Template({
   i18n,
   doUseDefaultCss,
   children,
-  headerStart,
-  headerEnd,
+  signupStep,
   footer,
 }: TaldoTemplateProps) {
   const { msgStr, currentLanguage, enabledLanguages } = i18n;
@@ -53,45 +51,54 @@ export default function Template({
   const showMessage =
     displayMessage && message !== undefined && (message.type !== 'warning' || !isAppInitiatedAction);
 
+  const languages =
+    enabledLanguages.length > 1 ? (
+      <nav aria-label={msgStr('languages')}>
+        <ul className={styles.languageList}>
+          {enabledLanguages.map(({ languageTag, label, href }) => (
+            <li key={languageTag}>
+              <a
+                href={href}
+                lang={languageTag}
+                className={styles.languageLink}
+                aria-current={languageTag === currentLanguage.languageTag ? 'true' : undefined}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ) : undefined;
+
+  const steps = signupSteps(i18n);
+  const progress =
+    signupStep === undefined ? undefined : (
+      <ProgressRail
+        steps={steps}
+        currentIndex={steps.findIndex(({ id }) => id === signupStep)}
+        label={msgStr('signupProgressLabel')}
+        summary={msgStr(
+          'signupProgressSummary',
+          String(steps.findIndex(({ id }) => id === signupStep) + 1),
+          String(steps.length),
+          steps.find(({ id }) => id === signupStep)?.label ?? '',
+        )}
+      />
+    );
+
   return (
-    <div className={styles.page}>
-      <main className={styles.card}>
-        <header className={styles.header}>
-          {headerStart ?? <Logo variant="lockup" size={28} />}
-          {headerEnd}
-        </header>
-        <div className={styles.body}>
-          {showMessage &&
-            (message.type === 'error' ? (
-              <ErrorBanner message={toText(message.summary)} />
-            ) : (
-              <p className={styles.notice} role="status">
-                {toText(message.summary)}
-              </p>
-            ))}
-          {children}
-          {footer}
-        </div>
-      </main>
-      {enabledLanguages.length > 1 && (
-        <nav className={styles.languages} aria-label={msgStr('languages')}>
-          <ul className={styles.languageList}>
-            {enabledLanguages.map(({ languageTag, label, href }) => (
-              <li key={languageTag}>
-                <a
-                  href={href}
-                  lang={languageTag}
-                  className={styles.languageLink}
-                  aria-current={languageTag === currentLanguage.languageTag ? 'true' : undefined}
-                >
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-    </div>
+    <FlowLayout headerEnd={languages} progress={progress} footer={footer}>
+      {showMessage &&
+        (message.type === 'error' ? (
+          <ErrorBanner message={toText(message.summary)} />
+        ) : (
+          <p className={styles.notice} role="status">
+            {toText(message.summary)}
+          </p>
+        ))}
+      {children}
+    </FlowLayout>
   );
 }
 

@@ -11,20 +11,30 @@ pages, then the theme renders, otherwise the app boots.
 
 ## What's in it
 
-| Page | Status |
-| --- | --- |
-| `register.ftl` | Ejected: `login/pages/Register.tsx`, one question per screen in the Taldo `Template` |
-| everything else (login, reset password, verify e-mail, …) | Keycloak's default markup, brought on brand by `login/fallback.css` (fonts, colours, radii) |
+Sign-up runs over four steps (taldo-api ADR 0006). The first three are Keycloak pages in this
+theme; the last one is the app's `/onboarding` page. All four show the same steps (shared
+`ProgressRail` in the shared `FlowLayout`), so the path reads as one, across Keycloak and the app.
 
-- `login/Template.tsx`: the Taldo shell (card, header bar, global message, language
-  links). Login and reset-password will reuse it when they get ejected.
-- `login/i18n.ts`: Dutch (default, informal "je") and English copy, including the
-  register-related Keycloak error messages. Keycloakify ships these in the JAR, so
-  messages Keycloak renders server-side use them too.
-- `login/pages/register/steps.ts`: how User Profile attributes become steps. Order: first
-  name, last name, e-mail, then any other attribute, then the password (if Keycloak asks for
-  one). A new attribute in the realm's User Profile gets its own step without code changes;
-  its question is its display name until it gets a `registerQuestion…` message.
+| Step | Page | Status |
+| --- | --- | --- |
+| 1. Your details | `register.ftl` | Ejected: `login/pages/Register.tsx`: first name, last name and work e-mail on one screen |
+| 2. Confirm your e-mail | `login-verify-email.ftl` | Ejected: `login/pages/LoginVerifyEmail.tsx`: the address the mail went to, and "send again" |
+| 3. Choose a password | `login-update-password.ftl` | Ejected: `login/pages/LoginUpdatePassword.tsx`: Keycloak's `UPDATE_PASSWORD` action after the link |
+| 4. Your role | app: `src/pages/onboarding` | `POST /onboarding` with the job role (IdentityApi.yml) |
+| – | `info.ftl` | Ejected: `login/pages/Info.tsx`, e.g. "is this your address?" when the link opens in another browser |
+| – | everything else (login, reset password, …) | Keycloak's default markup, brought on brand by `login/fallback.css` (fonts, colours, radii) |
+
+- `login/Template.tsx`: the Taldo shell for ejected pages (logo, language links, global
+  message, and the sign-up steps when a page passes `signupStep`). Built on `shared/ui`
+  `FlowLayout`, which the app's onboarding page uses too.
+- `login/signupSteps.ts`: the four sign-up steps and their copy keys. The app's onboarding
+  page has the same four in Dutch; change both together.
+- `login/i18n.ts`: Dutch (default, informal "je") and English copy, including the Keycloak
+  messages the sign-up pages can show. Keycloakify ships these in the JAR, so messages
+  Keycloak renders server-side use them too.
+- `login/pages/Register.tsx` renders the User Profile attributes Keycloak sends: first name,
+  last name, e-mail, then any other attribute, then the password if the realm puts it on the
+  form. A new attribute in the realm's User Profile shows up without code changes.
 - `login/pages/register/javaPatterns.ts`: the realm's User Profile patterns are Java
   regexes. Keycloakify checks them in the browser with a plain `new RegExp`, which throws on
   `(?i)` and never matches `\p{L}` (no `u` flag). Those patterns are translated and checked
@@ -37,11 +47,11 @@ The one exception is Google reCAPTCHA, and only if a realm turns it on.
 ## Develop
 
 ```bash
-npm run storybook     # http://localhost:6006, stories under "login/register.ftl"
+npm run storybook     # http://localhost:6006, stories under "login/…"
 ```
 
-Stories: empty form, field errors, e-mail already exists, password policy violation,
-global error, terms required, English. Mobile and desktop viewports are in the toolbar.
+Stories per page (register, verify e-mail, update password, info): empty, field and server
+errors, English. Mobile and desktop viewports are in the toolbar.
 
 Against a real Keycloak (needs Docker and Maven):
 
@@ -101,9 +111,8 @@ authorization request.
 
 With `verifyEmail` on (as in the taldo realm), Keycloak 26.8 leaves the password **out**
 of the registration form. The user sets it after clicking the verification link
-(`UPDATE_PASSWORD` page). The register page then has 3 steps. To ask for the password on the
-form (4 steps, as in the design), configure the realm's **Password Validation** registration
-execution:
+(`login-update-password.ftl`, step 3). To ask for the password on the register form instead,
+configure the realm's **Password Validation** registration execution:
 
 ```json
 {
@@ -113,4 +122,5 @@ execution:
 ```
 
 (Admin console: Authentication → registration → Password Validation → ⚙ → "Always set
-password on register form".) The theme handles both setups without code changes.
+password on register form".) The register page then shows the password fields too; the
+update-password step is skipped by Keycloak.

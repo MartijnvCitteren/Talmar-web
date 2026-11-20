@@ -52,7 +52,8 @@ export const { getKcContextMock } = createGetKcContextMock({
   },
   overridesPerPage: {
     'register.ftl': {
-      passwordRequired: true,
+      // The taldo realm verifies e-mail, so Keycloak asks for the password afterwards, not here.
+      passwordRequired: false,
       passwordPolicies: { length: 12, maxLength: 128, notEmail: true },
       profile: {
         attributesByName: {
@@ -74,6 +75,12 @@ export const { getKcContextMock } = createGetKcContextMock({
           lastName: personName('lastName'),
         },
       },
+    },
+    'login-verify-email.ftl': {
+      user: { email: 'sanne@bedrijf.nl' },
+    },
+    'login-update-password.ftl': {
+      auth: { attemptedUsername: 'sanne@bedrijf.nl' },
     },
   },
 });
