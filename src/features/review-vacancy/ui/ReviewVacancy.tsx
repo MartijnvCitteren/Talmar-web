@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import {
   categoryLabels,
+  languageLabels,
   workplaceTypeLabels,
   formatSalary,
   formatHoursPerWeek,
@@ -15,6 +16,7 @@ import {
   type VacancyDescriptionResponse,
 } from '../../../entities/vacancy-description';
 import type { ApiError } from '../../../shared/api';
+import { toUserMessage } from '../../../shared/lib/problem-details';
 import { Button, Card, CardHeader, ErrorBanner, Skeleton, TextField } from '../../../shared/ui';
 import styles from './ReviewVacancy.module.css';
 
@@ -37,6 +39,8 @@ export interface ReviewVacancyProps {
   description?: VacancyDescriptionResponse;
   mode: 'manual' | 'ai' | null;
   phase?: ReviewVacancyGenerationPhase;
+  /** Why the AI draft could not be made, shown when `phase` is `failed`. */
+  generationError?: string;
   /** The vakantiedagen amount/period the user actually entered (ADR-0005), preferred over reconstructing from the converted annual figure. */
   holidayInput?: ReviewVacancyHolidayInput;
   onDescriptionSaved: (description: VacancyDescriptionResponse) => void;
@@ -80,6 +84,7 @@ export function ReviewVacancy({
   description,
   mode,
   phase = 'idle',
+  generationError,
   holidayInput,
   onDescriptionSaved,
   onRegenerate,
@@ -119,7 +124,14 @@ export function ReviewVacancy({
       setEditingSection(null);
     } catch (caught) {
       const apiError = caught as ApiError;
-      setError(apiError.detail ?? apiError.title ?? 'Opslaan van de vacaturetekst is mislukt.');
+      setError(
+        toUserMessage(apiError, {
+          fallback: 'Opslaan van de vacaturetekst is niet gelukt. Probeer het zo nog eens.',
+          byStatus: {
+            400: 'De tekst bevat iets wat we niet kunnen opslaan, zoals HTML-tags, of is te lang. Pas de tekst aan en probeer het opnieuw.',
+          },
+        }),
+      );
     } finally {
       setSaving(false);
     }
@@ -134,7 +146,14 @@ export function ReviewVacancy({
       onViewPreview();
     } catch (caught) {
       const apiError = caught as ApiError;
-      setError(apiError.detail ?? apiError.title ?? 'Opslaan van de vacaturetekst is mislukt.');
+      setError(
+        toUserMessage(apiError, {
+          fallback: 'Opslaan van de vacaturetekst is niet gelukt. Probeer het zo nog eens.',
+          byStatus: {
+            400: 'De tekst bevat iets wat we niet kunnen opslaan, zoals HTML-tags, of is te lang. Pas de tekst aan en probeer het opnieuw.',
+          },
+        }),
+      );
     } finally {
       setSaving(false);
     }
@@ -224,6 +243,7 @@ export function ReviewVacancy({
               {workplaceTypeLabels[vacancy.workplaceType]} ·{' '}
               {/* minHoursPerWeek/maxHoursPerWeek are optional on VacancyResponse for schema laxity only — always set once a vacancy exists, required by VacancyCoreRequest at creation. */}
               {formatHoursPerWeek(vacancy.minHoursPerWeek ?? 0, vacancy.maxHoursPerWeek ?? 0)}
+              {vacancy.language && <> · {languageLabels[vacancy.language]}</>}
             </div>
           </div>
           <button
@@ -246,6 +266,7 @@ export function ReviewVacancy({
         ) : (
           <>
             <ErrorBanner message={error} />
+            {mode === 'ai' && phase === 'failed' && !description && <ErrorBanner message={generationError} />}
             {renderSection('summary')}
             {renderSection('jobDescription')}
             {renderSection('tasks')}

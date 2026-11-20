@@ -23,6 +23,7 @@ const vacancy: VacancyResponse = {
   id: 'vacancy-1',
   status: 'DRAFT',
   jobTitle: 'Senior Backend Developer',
+  language: 'EN',
   category: 'ENGINEERING',
   location: { country: 'NL', city: 'Amsterdam' },
   workplaceType: 'HYBRID',
@@ -106,6 +107,7 @@ describe('ReviewVacancy', () => {
     );
 
     expect(screen.getByText(/24–36 uur per week/)).toBeInTheDocument();
+    expect(screen.getByText(/· Engels/)).toBeInTheDocument();
   });
 
   it('does not show "Opnieuw" regenerate controls in manual mode', () => {

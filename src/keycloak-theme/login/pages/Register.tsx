@@ -198,7 +198,7 @@ export default function Register({ kcContext, i18n, doUseDefaultCss, classes }: 
       i18n={i18n}
       doUseDefaultCss={doUseDefaultCss}
       classes={classes}
-      documentTitle={`${msgStr('registerTitle')} · ${realm.displayName || 'Talmar'}`}
+      documentTitle={`${msgStr('registerTitle')} · ${realm.displayName || 'Taldo'}`}
       headerNode={msg('registerTitle')}
       displayMessage={messagesPerField.exists('global')}
       headerStart={

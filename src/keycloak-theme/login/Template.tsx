@@ -7,8 +7,8 @@ import type { I18n } from './i18n';
 import type { KcContext } from './KcContext';
 import styles from './Template.module.css';
 
-export type TalmarTemplateProps = TemplateProps<KcContext, I18n> & {
-  /** Left of the header bar; defaults to the Talmar lockup. */
+export type TaldoTemplateProps = TemplateProps<KcContext, I18n> & {
+  /** Left of the header bar; defaults to the Taldo lockup. */
   headerStart?: ReactNode;
   /** Right of the header bar, e.g. a step counter. */
   headerEnd?: ReactNode;
@@ -17,7 +17,7 @@ export type TalmarTemplateProps = TemplateProps<KcContext, I18n> & {
 };
 
 /**
- * The Talmar shell for Keycloak pages: one card with a header bar, the global message and the
+ * The Taldo shell for Keycloak pages: one card with a header bar, the global message and the
  * page. Pages that are ejected into this theme (register now; login and reset-password next)
  * render inside it. Pages that aren't ejected use Keycloakify's own Template (see KcPage).
  */
@@ -31,7 +31,7 @@ export default function Template({
   headerStart,
   headerEnd,
   footer,
-}: TalmarTemplateProps) {
+}: TaldoTemplateProps) {
   const { msgStr, currentLanguage, enabledLanguages } = i18n;
   const { realm, message, isAppInitiatedAction } = kcContext;
 

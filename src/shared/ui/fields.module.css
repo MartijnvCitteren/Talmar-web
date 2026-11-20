@@ -31,8 +31,8 @@
   max-width: 100%;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-control);
-  border: 1px solid var(--border-hairline);
-  background: var(--surface-card);
+  border: 1px solid var(--border-input);
+  background: var(--surface-input);
   color: var(--text-primary);
   font: inherit;
   transition: var(--transition-hover);

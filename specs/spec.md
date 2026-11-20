@@ -1,7 +1,7 @@
 # Spec: Vacancy creation frontend (GitHub issue #4)
 
-Repo: Talmar-web. Epic 1 — Lean ATS core. Prio 1.
-Issue: https://github.com/MartijnvCitteren/Talmar-web/issues/4
+Repo: Taldo-web. Epic 1 — Lean ATS core. Prio 1.
+Issue: https://github.com/MartijnvCitteren/Taldo-web/issues/4
 
 ## Story
 As a frontend developer, I want a TypeScript + React project set up with the vacancy generation
@@ -10,7 +10,7 @@ LLM, and editing it manually — consuming the backend through the existing Open
 
 Implements the UI for: vacancy creation, LLM-assisted description generation, and manual
 description entry. Consumes `specs/vacancy.yml` (copied from
-`talmar-api/talmar-contracts/.../VacancyApi.yml`).
+`taldo-api/taldo-contracts/.../VacancyApi.yml`).
 
 ## Decisions already made (from the issue, treat as fixed)
 1. **Tooling: Vite + React + TypeScript**, not Next.js. Internal authenticated recruiter tool, no

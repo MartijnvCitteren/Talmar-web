@@ -20,6 +20,7 @@ test.describe('create-vacancy happy path', () => {
           id: 'vacancy-e2e-1',
           status: 'DRAFT',
           jobTitle: 'Senior Backend Developer',
+          language: 'NL',
           category: 'ENGINEERING',
           location: { country: 'NL', city: 'Amsterdam' },
           workplaceType: 'HYBRID',
@@ -58,6 +59,7 @@ test.describe('create-vacancy happy path', () => {
           id: 'vacancy-e2e-1',
           status: 'DRAFT',
           jobTitle: 'Senior Backend Developer',
+          language: 'NL',
           category: 'ENGINEERING',
           location: { country: 'NL', city: 'Amsterdam' },
           workplaceType: 'HYBRID',
@@ -70,7 +72,8 @@ test.describe('create-vacancy happy path', () => {
       });
     });
 
-    await page.route(`${API_BASE_URL}/vacancy/vacancy-e2e-1/publish`, async (route) => {
+    await page.route(`${API_BASE_URL}/vacancy/vacancy-e2e-1/transitions`, async (route) => {
+      expect(route.request().postDataJSON()).toEqual({ action: 'PUBLISH' });
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -78,6 +81,7 @@ test.describe('create-vacancy happy path', () => {
           id: 'vacancy-e2e-1',
           status: 'PUBLISHED',
           jobTitle: 'Senior Backend Developer',
+          language: 'NL',
           category: 'ENGINEERING',
           location: { country: 'NL', city: 'Amsterdam' },
           workplaceType: 'HYBRID',
@@ -95,6 +99,7 @@ test.describe('create-vacancy happy path', () => {
     // Step 1: Basisgegevens
     await expect(page.getByRole('heading', { name: 'Basisgegevens' })).toBeVisible();
     await page.getByLabel('Functietitel').fill('Senior Backend Developer');
+    await expect(page.getByLabel('Taal van de vacature')).toHaveValue('NL');
     await page.getByLabel('Categorie').selectOption('ENGINEERING');
     await page.getByLabel('Land').selectOption('NL');
     await page.getByLabel('Stad').fill('Amsterdam');

@@ -1,4 +1,4 @@
-# Design notes — Talmar Nieuwe Vacature (vacancy creation)
+# Design notes — Taldo Nieuwe Vacature (vacancy creation)
 
 Status: **VERIFIED, high-fidelity** — supersedes the 2026-09-19 approximate pass below.
 
@@ -35,7 +35,7 @@ Colour (`colors.css`, `semantic.css`) — all `oklch()`, light theme only:
 | `--status-insight-bg` | `#efe8fb` | `--surface-advice` |
 
 Rationed hard: `--violet`/`--accent-advice` appears **only** on AI/advice surfaces (the
-"Talmar stelt een concept op" choice card, the generating banner, "Opnieuw" regenerate
+"Taldo stelt een concept op" choice card, the generating banner, "Opnieuw" regenerate
 links, the sparkles icon chip). Never used decoratively elsewhere.
 
 Scrim: `rgba(18, 24, 26, .5)` — the one alpha value in the system.
@@ -86,8 +86,8 @@ current build (`src/widgets/app-shell/`):
 - Sticky, `z-index: 20`, `background: var(--surface-card)`, `border-bottom: 1px solid
   var(--border-hairline)`. Inner row `max-width: var(--content-max)` (840px, not the
   current 1160px), height 64px.
-- Left: Talmar **lockup** logo (`_ds/assets/logo/jobzy-lockup.svg`), size 30 — not the
-  plain "Talmar" text currently rendered.
+- Left: Taldo **lockup** logo (`_ds/assets/logo/jobzy-lockup.svg`), size 30 — not the
+  plain "Taldo" text currently rendered.
 - Nav items use real Lucide icons (`layout-dashboard`, `briefcase`, `users`,
   `chart-bar`) at 17px, `gap: var(--space-1)`, alongside the label — current build has
   no icons.
@@ -99,7 +99,7 @@ current build (`src/widgets/app-shell/`):
   hover — implement as `border: 1.5px solid transparent` by default).
 - Avatar dropdown is a **real interactive menu**, not the current static list: opens on
   click, closes on outside mousedown (`[data-dd]` pattern, shared with the other
-  dropdowns — see below), header block "Merel Janssen" / "Talmar", hairline divider,
+  dropdowns — see below), header block "Merel Janssen" / "Taldo", hairline divider,
   then Account/Instellingen/Support rows with hover state
   (`var(--nav-active-bg)`/`var(--nav-active-fg)`). Still non-functional beyond
   open/close (destinations unobserved — open-questions.md #6 still applies).
@@ -140,7 +140,7 @@ fields) **simultaneously** on step 2. The real design has step 2 show **only a m
 choice**:
 
 - Two choice cards (`repeat(auto-fit, minmax(260px, 1fr))`, gap 16px): "Zelf schrijven"
-  (pencil icon, teal border when selected, `--status-passed-bg` fill) and "Talmar stelt
+  (pencil icon, teal border when selected, `--status-passed-bg` fill) and "Taldo stelt
   een concept op" (permanently violet — `--surface-advice` bg, `--violet` border, 40x40
   icon chip with `sparkles`, violet ring `0 0 0 2px var(--violet)` when selected).
 - An `AdviceCard` below both, always visible: "Een concept vacaturetekst bespaart
@@ -206,7 +206,7 @@ plain read-only `<p>` dump. The real design's Overzicht:
 ## Preview — candidate's view (missing entirely today)
 
 New screen. Eyebrow + H1 + "Tekst aanpassen" link back to Overzicht. Card
-(`padding: 0`): header block (Talmar symbol + "Geplaatst via Talmar", job title 30px/700,
+(`padding: 0`): header block (Taldo symbol + "Geplaatst via Taldo", job title 30px/700,
 four chips: location / workplace / hours-per-week (mono) / salary range or "Salaris in
 overleg" (mono)); body (summary, "Over de rol", "Wat je gaat doen", "Voorwaarden" mono);
 contact line + **disabled** "Solliciteren" button (this is a preview, not a real apply

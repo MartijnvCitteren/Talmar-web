@@ -17,7 +17,8 @@
 }
 
 .bannerGenerating,
-.bannerReady {
+.bannerReady,
+.bannerFailed {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -34,4 +35,15 @@
 .bannerReady {
   background: var(--status-passed-bg);
   color: var(--teal);
+}
+
+/* Needs attention: sand with a square marker (status never by color alone). */
+.bannerFailed {
+  background: var(--status-attention-bg);
+  color: var(--text-primary);
+}
+
+.bannerFailed svg {
+  color: var(--status-attention);
+  flex-shrink: 0;
 }

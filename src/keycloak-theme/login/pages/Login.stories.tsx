@@ -3,7 +3,7 @@ import { createKcPageStory } from '../KcPageStory';
 
 const { KcPageStory } = createKcPageStory({ pageId: 'login.ftl' });
 
-/** Not ejected yet: Keycloak's own login page with the Talmar brand override (fallback.css). */
+/** Not ejected yet: Keycloak's own login page with the Taldo brand override (fallback.css). */
 const meta = {
   title: 'login/login.ftl (fallback)',
   component: KcPageStory,

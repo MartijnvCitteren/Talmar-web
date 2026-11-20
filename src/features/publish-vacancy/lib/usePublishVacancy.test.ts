@@ -72,7 +72,7 @@ describe('usePublishVacancy', () => {
       await expect(result.current.publish('vacancy-1')).rejects.toBeDefined();
     });
 
-    expect(result.current.error).toBe('Vacancy cannot be published in its current state.');
+    expect(result.current.error).toMatch(/kan nu niet worden gepubliceerd/);
     expect(result.current.publishing).toBe(false);
   });
 });

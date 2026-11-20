@@ -35,7 +35,7 @@ export function ThreeQuestionsModal({ open, onClose, onSubmit }: ThreeQuestionsM
   return (
     <Modal open={open} onClose={onClose} title="Drie korte vragen" maxWidth={560}>
       <p>
-        Beantwoord deze drie vragen kort en concreet. Talmar zorgt voor de rest. Hoe concreter, hoe
+        Beantwoord deze drie vragen kort en concreet. Taldo zorgt voor de rest. Hoe concreter, hoe
         minder je hoeft bij te schaven.
       </p>
       <TextField

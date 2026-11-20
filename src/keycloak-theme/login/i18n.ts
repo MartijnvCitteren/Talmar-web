@@ -2,7 +2,7 @@ import { i18nBuilder } from 'keycloakify/login';
 import type { ThemeName } from '../kc.gen';
 
 /**
- * Talmar copy for the Keycloak pages. Dutch is the default (informal "je", see the design
+ * Taldo copy for the Keycloak pages. Dutch is the default (informal "je", see the design
  * system's voice & tone); English is the second language.
  *
  * Keycloakify reads these translations statically at build time and ships them in the theme
@@ -51,7 +51,7 @@ const { useI18n, ofTypeI18n } = i18nBuilder
       invalidPasswordMinLengthMessage: 'Je wachtwoord heeft minimaal {0} tekens nodig.',
       invalidPasswordMaxLengthMessage: 'Je wachtwoord mag maximaal {0} tekens hebben.',
       invalidPasswordNotEmailMessage: 'Je wachtwoord mag niet hetzelfde zijn als je e-mailadres.',
-      // Custom error keys set by the realm's User Profile validators (talmar-api realm).
+      // Custom error keys set by the realm's User Profile validators (taldo-api realm).
       publicEmailDomainNotAllowed:
         'Gebruik je werkmailadres. Adressen van publieke mailproviders kunnen we niet gebruiken.',
       invalidPersonName: 'Gebruik alleen letters, spaties, koppeltekens, apostroffen en punten.',

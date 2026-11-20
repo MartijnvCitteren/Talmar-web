@@ -38,7 +38,7 @@ offer a period-aware input against a period-less API field.
   `preview-vacancy` so Overzicht/Preview can redisplay what the user actually typed
   ("5 vakantiedagen per week") rather than always showing the converted annual figure
   ("260 vakantiedagen per jaar") within the same session.
-- Raise an upstream `talmar-contracts` request to add a `holidayPeriod` field to `Offer`
+- Raise an upstream `taldo-contracts` request to add a `holidayPeriod` field to `Offer`
   (mirroring `SalaryPeriod`'s shape) — tracked in `specs/open-questions.md` #15, cross-
   team, not fixable from this repo alone.
 

@@ -1596,8 +1596,8 @@
   "smtpServer": {
     "host": "mailpit",
     "port": "1025",
-    "from": "no-reply@talmar.local",
-    "fromDisplayName": "Talmar"
+    "from": "no-reply@taldo.local",
+    "fromDisplayName": "Taldo"
   },
   "loginTheme": "keycloakify-starter",
   "accountTheme": "",
@@ -2409,5 +2409,5 @@
     "policies": []
   },
   "passwordPolicy": "length(12) and maxLength(128) and notEmail(undefined)",
-  "displayName": "Talmar"
+  "displayName": "Taldo"
 }

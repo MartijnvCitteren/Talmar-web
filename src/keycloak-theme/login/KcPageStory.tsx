@@ -12,7 +12,7 @@ const kcContextExtension: KcContextExtension = {
 };
 const kcContextExtensionPerPage: KcContextExtensionPerPage = {};
 
-// Mirrors the talmar realm (talmar-api/docker/keycloak/talmar-realm.json) so stories behave like
+// Mirrors the taldo realm (taldo-api/docker/keycloak/taldo-realm.json) so stories behave like
 // the real pages: e-mail is the username, Dutch is the default language, same User Profile rules.
 const PERSON_NAME_PATTERN = "^(?=.*\\p{L})[\\p{L}\\p{M}'’.-]+( [\\p{L}\\p{M}'’.-]+)*$";
 const WORK_EMAIL_PATTERN =
@@ -36,9 +36,9 @@ export const { getKcContextMock } = createGetKcContextMock({
   kcContextExtensionPerPage,
   overrides: {
     realm: {
-      name: 'talmar',
-      displayName: 'Talmar',
-      displayNameHtml: 'Talmar',
+      name: 'taldo',
+      displayName: 'Taldo',
+      displayNameHtml: 'Taldo',
       registrationEmailAsUsername: true,
       internationalizationEnabled: true,
     },
