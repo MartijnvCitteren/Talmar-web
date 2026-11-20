@@ -47,8 +47,11 @@ describe('login-verify-email.ftl', () => {
     renderPage('login-verify-email.ftl');
 
     expect(await screen.findByRole('heading', { name: 'Check je inbox' })).toBeInTheDocument();
-    expect(screen.getByText('sanne@bedrijf.nl')).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('sanne@bedrijf.nl')).toBeInTheDocument();
     expect(currentStep()).toHaveTextContent('Mailadres bevestigen');
+    const badge = screen.getByRole('figure', { name: 'Voorbeeld van je account' });
+    expect(within(badge).getByText('Bedrijf')).toBeInTheDocument();
+    expect(within(badge).getByText('Mail onderweg')).toBeInTheDocument();
   });
 
   it('offers to send the mail again through Keycloak', async () => {

@@ -7,12 +7,12 @@ import type { I18n } from './i18n';
  */
 export type SignupStep = 'details' | 'verify' | 'password' | 'role';
 
-export function signupSteps(i18n: I18n): { id: SignupStep; label: string; hint: string }[] {
+export function signupSteps(i18n: I18n): { id: SignupStep; label: string }[] {
   const { msgStr } = i18n;
   return [
-    { id: 'details', label: msgStr('signupStepDetails'), hint: msgStr('signupStepDetailsHint') },
-    { id: 'verify', label: msgStr('signupStepVerify'), hint: msgStr('signupStepVerifyHint') },
-    { id: 'password', label: msgStr('signupStepPassword'), hint: msgStr('signupStepPasswordHint') },
-    { id: 'role', label: msgStr('signupStepRole'), hint: msgStr('signupStepRoleHint') },
+    { id: 'details', label: msgStr('signupStepDetails') },
+    { id: 'verify', label: msgStr('signupStepVerify') },
+    { id: 'password', label: msgStr('signupStepPassword') },
+    { id: 'role', label: msgStr('signupStepRole') },
   ];
 }

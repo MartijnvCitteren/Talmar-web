@@ -12,8 +12,11 @@ pages, then the theme renders, otherwise the app boots.
 ## What's in it
 
 Sign-up runs over four steps (taldo-api ADR 0006). The first three are Keycloak pages in this
-theme; the last one is the app's `/onboarding` page. All four show the same steps (shared
-`ProgressRail` in the shared `FlowLayout`), so the path reads as one, across Keycloak and the app.
+theme; the last one is the app's `/onboarding` page. All four share one frame (`shared/ui`
+`FlowLayout` with a `ProgressRail`), so the path reads as one, across Keycloak and the app. From
+1024px a teal panel sits beside the form with an ID badge on a lanyard (`shared/ui` `IdBadge`)
+that fills in step by step: name, the company previewed from the e-mail domain
+(`shared/lib/company-from-email.ts`, the API's naming rule), e-mail status, role.
 
 | Step | Page | Status |
 | --- | --- | --- |
@@ -25,7 +28,8 @@ theme; the last one is the app's `/onboarding` page. All four show the same step
 | – | everything else (login, reset password, …) | Keycloak's default markup, brought on brand by `login/fallback.css` (fonts, colours, radii) |
 
 - `login/Template.tsx`: the Taldo shell for ejected pages (logo, language links, global
-  message, and the sign-up steps when a page passes `signupStep`). Built on `shared/ui`
+  message, the sign-up steps when a page passes `signupStep`, and the wide-screen panel when
+  it passes `aside`, e.g. `login/SignupPanel.tsx`). Built on `shared/ui`
   `FlowLayout`, which the app's onboarding page uses too.
 - `login/signupSteps.ts`: the four sign-up steps and their copy keys. The app's onboarding
   page has the same four in Dutch; change both together.

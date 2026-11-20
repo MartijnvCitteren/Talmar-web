@@ -13,6 +13,8 @@ export type TaldoTemplateProps = TemplateProps<KcContext, I18n> & {
   signupStep?: SignupStep;
   /** Below the page, e.g. the link back to login. */
   footer?: ReactNode;
+  /** The wide-screen panel beside the page, e.g. the sign-up badge (SignupPanel). */
+  aside?: ReactNode;
 };
 
 /**
@@ -29,6 +31,7 @@ export default function Template({
   children,
   signupStep,
   footer,
+  aside,
 }: TaldoTemplateProps) {
   const { msgStr, currentLanguage, enabledLanguages } = i18n;
   const { realm, message, isAppInitiatedAction } = kcContext;
@@ -75,7 +78,7 @@ export default function Template({
   const progress =
     signupStep === undefined ? undefined : (
       <ProgressRail
-        steps={steps}
+        steps={steps.map(({ label }) => label)}
         currentIndex={steps.findIndex(({ id }) => id === signupStep)}
         label={msgStr('signupProgressLabel')}
         summary={msgStr(
@@ -88,7 +91,7 @@ export default function Template({
     );
 
   return (
-    <FlowLayout headerEnd={languages} progress={progress} footer={footer}>
+    <FlowLayout headerEnd={languages} progress={progress} footer={footer} aside={aside}>
       {showMessage &&
         (message.type === 'error' ? (
           <ErrorBanner message={toText(message.summary)} />

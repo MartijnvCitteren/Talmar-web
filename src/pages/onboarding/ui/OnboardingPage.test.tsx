@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { accountApi } from '../../../entities/account';
@@ -35,6 +35,16 @@ describe('OnboardingPage', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
   });
 
+  it('shows the picked role on the account badge beside the form', async () => {
+    const user = renderPage();
+    const badge = screen.getByRole('figure', { name: 'Voorbeeld van je account' });
+    expect(within(badge).getByText('Kies je rol')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: /Oprichter of directeur/ }));
+
+    expect(within(badge).getByText('Oprichter of directeur')).toBeInTheDocument();
+  });
+
   it('goes into the app once the account is active', async () => {
     vi.mocked(accountApi.onboard).mockResolvedValue({ status: 'ACTIVE' });
     const user = renderPage();
@@ -53,7 +63,8 @@ describe('OnboardingPage', () => {
     await user.click(screen.getByRole('button', { name: 'Account afronden' }));
 
     expect(await screen.findByRole('heading', { name: 'Je bedrijf moet je nog toelaten' })).toBeInTheDocument();
-    expect(screen.getByText('Wacht op goedkeuring')).toBeInTheDocument();
+    expect(within(screen.getByRole('main')).getByText('Wacht op goedkeuring')).toBeInTheDocument();
+    expect(within(screen.getByRole('figure', { name: 'Voorbeeld van je account' })).getByText('Wacht op goedkeuring')).toBeInTheDocument();
     expect(screen.queryByRole('listitem', { current: 'step' })).not.toBeInTheDocument();
   });
 });

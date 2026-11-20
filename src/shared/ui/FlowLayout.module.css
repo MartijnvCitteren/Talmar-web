@@ -1,8 +1,12 @@
 .page {
   min-height: 100dvh;
+  background: var(--surface-page);
+}
+
+.primary {
   display: flex;
   flex-direction: column;
-  background: var(--surface-page);
+  min-height: 100dvh;
 }
 
 .header {
@@ -37,6 +41,10 @@
   font-size: var(--text-ui-size);
 }
 
+.aside {
+  display: none;
+}
+
 @media (min-width: 640px) {
   .header {
     padding: var(--space-3) var(--space-4);
@@ -47,28 +55,41 @@
   }
 }
 
-/* Wide: the steps sit in a column left of the task, which keeps its form width. */
 @media (min-width: 1024px) {
-  .body[data-has-progress='true'] {
-    --progress-column: calc(var(--space-6) * 4);
+  .body {
+    padding-top: var(--space-6);
+  }
 
+  /* Task on the left, the panel on the right: a little narrower, fixed while the task scrolls. */
+  .page[data-has-aside='true'] {
     display: grid;
-    grid-template-columns: var(--progress-column) minmax(0, var(--form-max));
-    justify-content: center;
-    column-gap: var(--space-6);
-    max-width: var(--content-max);
-    padding-top: var(--space-6);
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   }
 
-  .body[data-has-progress='true'] .progress {
+  .page[data-has-aside='true'] .body {
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-top: var(--space-5);
+  }
+
+  /* The teal runs the full height of the page; its content stays in view while the task scrolls. */
+  .aside {
+    display: block;
+    overflow: clip;
+    background: var(--action-primary);
+    color: var(--text-on-accent);
+  }
+
+  .asideContent {
     position: sticky;
-    top: var(--space-5);
-    align-self: start;
-    margin-bottom: 0;
-    padding-top: var(--space-1);
-  }
-
-  .body:not([data-has-progress='true']) {
-    padding-top: var(--space-6);
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    height: 100dvh;
+    padding: var(--space-6) var(--space-5);
+    overflow: hidden;
   }
 }

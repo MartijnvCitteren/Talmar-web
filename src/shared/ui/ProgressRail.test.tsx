@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { ProgressRail } from './ProgressRail';
 
-const steps = [
-  { label: 'Je gegevens', hint: 'Naam en werkmailadres' },
-  { label: 'Mailadres bevestigen' },
-  { label: 'Wachtwoord kiezen' },
-];
+const steps = ['Je gegevens', 'Mailadres bevestigen', 'Wachtwoord kiezen'];
 
 describe('ProgressRail', () => {
   it('lists every step, marks the current one and the ones before it as done', () => {
@@ -15,7 +11,7 @@ describe('ProgressRail', () => {
     const items = within(screen.getByRole('navigation', { name: 'Je aanmelding' })).getAllByRole('listitem');
     expect(items.map((item) => item.dataset.status)).toEqual(['done', 'current', 'upcoming']);
     expect(items[1]).toHaveAttribute('aria-current', 'step');
-    expect(items[0]).toHaveTextContent('Naam en werkmailadres');
+    expect(items[1]).toHaveTextContent('Mailadres bevestigen');
   });
 
   it('marks everything done once past the last step', () => {

@@ -9,6 +9,7 @@ import { Button, Checkbox, PasswordField, TextField } from '../../../shared/ui';
 import type { KcContext } from '../KcContext';
 import type { I18n } from '../i18n';
 import Template from '../Template';
+import { SignupPanel } from '../SignupPanel';
 import { extractJavaPatterns } from './register/javaPatterns';
 import page from './page.module.css';
 import styles from './Register.module.css';
@@ -161,6 +162,8 @@ export default function Register({ kcContext, i18n, doUseDefaultCss, classes }: 
       onBlur={() => loseFocus(state.attribute.name)}
     />
   );
+  const valueOf = (name: string) => String(formFieldStates.find(({ attribute }) => attribute.name === name)?.valueOrValues ?? '');
+  const email = valueOf('email').trim();
   const nameFields = visibleFields.filter(({ attribute }) => ['firstName', 'lastName'].includes(attribute.name));
   const otherFields = visibleFields.filter(({ attribute }) => !['firstName', 'lastName'].includes(attribute.name));
 
@@ -174,6 +177,15 @@ export default function Register({ kcContext, i18n, doUseDefaultCss, classes }: 
       headerNode={msg('registerTitle')}
       displayMessage={messagesPerField.exists('global')}
       signupStep="details"
+      aside={
+        <SignupPanel
+          step="details"
+          i18n={i18n}
+          name={`${valueOf('firstName').trim()} ${valueOf('lastName').trim()}`.trim()}
+          email={email}
+          isWorkEmail={patternError('email', email) === undefined}
+        />
+      }
       footer={
         <p>
           {msgStr('registerHaveAccount')}{' '}

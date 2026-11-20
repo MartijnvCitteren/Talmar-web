@@ -89,6 +89,27 @@ describe('Register', () => {
     expect(screen.getByLabelText('Voornaam')).toHaveFocus();
   });
 
+  it('fills in the account badge as you type, with the company taken from the mail domain', async () => {
+    const { user } = renderRegister();
+    const badge = await screen.findByRole('figure', { name: 'Voorbeeld van je account' });
+    expect(within(badge).getByText('Je naam')).toBeInTheDocument();
+    expect(within(badge).getByText('Je bedrijf')).toBeInTheDocument();
+
+    await fillIn(user, 'zoe@acme-logistics.nl');
+
+    expect(within(badge).getByText("Zoë 't Hooft")).toBeInTheDocument();
+    expect(within(badge).getByText('Acme-logistics')).toBeInTheDocument();
+    expect(within(badge).getByText('ZH')).toBeInTheDocument();
+  });
+
+  it('previews no company for a public mail provider', async () => {
+    const { user } = renderRegister();
+    await fillIn(user, 'zoe@gmail.com');
+
+    const badge = screen.getByRole('figure', { name: 'Voorbeeld van je account' });
+    expect(within(badge).getByText('Je bedrijf')).toBeInTheDocument();
+  });
+
   it('turns down public mail providers before posting', async () => {
     const { user } = renderRegister();
     await fillIn(user, 'sanne@Gmail.com');

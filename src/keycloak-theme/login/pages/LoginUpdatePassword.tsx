@@ -4,6 +4,7 @@ import { Button, Checkbox, PasswordField } from '../../../shared/ui';
 import type { KcContext } from '../KcContext';
 import type { I18n } from '../i18n';
 import Template from '../Template';
+import { SignupPanel } from '../SignupPanel';
 import page from './page.module.css';
 import styles from './LoginUpdatePassword.module.css';
 
@@ -64,6 +65,11 @@ export default function LoginUpdatePassword({
       headerNode={msg('updatePasswordTitle')}
       displayMessage={!messagesPerField.existsError('password', 'password-confirm')}
       signupStep={isAppInitiatedAction ? undefined : 'password'}
+      aside={
+        isAppInitiatedAction ? undefined : (
+          <SignupPanel step="password" i18n={i18n} email={auth?.attemptedUsername} />
+        )
+      }
     >
       <div className={page.intro}>
         <h1>{msgStr('updatePasswordTitle')}</h1>

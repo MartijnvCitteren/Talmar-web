@@ -16,10 +16,12 @@ const ICONS: Record<JobRole, LucideIcon> = {
 export interface JobRoleFormProps {
   /** Called once onboarding succeeded (or had already happened). */
   onDone: (outcome: OnboardingOutcome) => void;
+  /** Called when a role is picked, before it is sent, e.g. for a preview. */
+  onRoleChange?: (jobRole: JobRole) => void;
 }
 
 /** The last sign-up step: pick a job role, which finishes the account (`POST /onboarding`). */
-export function JobRoleForm({ onDone }: JobRoleFormProps) {
+export function JobRoleForm({ onDone, onRoleChange }: JobRoleFormProps) {
   const [jobRole, setJobRole] = useState<JobRole | undefined>(undefined);
   const [showMissing, setShowMissing] = useState(false);
   const { onboard, submitting, error } = useOnboardAccount();
@@ -60,6 +62,7 @@ export function JobRoleForm({ onDone }: JobRoleFormProps) {
                 onChange={() => {
                   setJobRole(value);
                   setShowMissing(false);
+                  onRoleChange?.(value);
                 }}
               />
               <span className={styles.icon} aria-hidden="true">

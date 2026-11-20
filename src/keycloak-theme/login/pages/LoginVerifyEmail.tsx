@@ -3,6 +3,7 @@ import type { PageProps } from 'keycloakify/login/pages/PageProps';
 import type { KcContext } from '../KcContext';
 import type { I18n } from '../i18n';
 import Template from '../Template';
+import { SignupPanel } from '../SignupPanel';
 import page from './page.module.css';
 import styles from './LoginVerifyEmail.module.css';
 
@@ -31,6 +32,7 @@ export default function LoginVerifyEmail({ kcContext, i18n, doUseDefaultCss, cla
       // confirmation or an error is still worth showing.
       displayMessage={message?.type !== 'warning'}
       signupStep="verify"
+      aside={<SignupPanel step="verify" i18n={i18n} email={user?.email} />}
     >
       <div className={page.intro}>
         <span className={styles.icon} aria-hidden="true">

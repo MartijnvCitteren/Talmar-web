@@ -7,3 +7,11 @@
 .lede {
   color: var(--text-secondary);
 }
+
+.caption {
+  max-width: calc(var(--space-6) * 5);
+  color: var(--text-on-accent);
+  font-size: var(--text-control-size);
+  line-height: var(--line-snug);
+  text-align: center;
+}
