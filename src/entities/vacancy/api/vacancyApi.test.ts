@@ -29,12 +29,13 @@ describe('vacancyApi', () => {
     vi.mocked(httpClient.post).mockResolvedValue(vacancy);
     const body: VacancyCoreRequest = {
       jobTitle: 'Senior Backend Developer',
+      language: 'NL',
       category: 'ENGINEERING',
       location: { country: 'NL', city: 'Amsterdam' },
       workplaceType: 'HYBRID',
       minHoursPerWeek: 24,
       maxHoursPerWeek: 36,
-    } as unknown as VacancyCoreRequest;
+    };
 
     const result = await vacancyApi.createVacancy(body);
 
@@ -42,22 +43,21 @@ describe('vacancyApi', () => {
     expect(result).toEqual(vacancy);
   });
 
-  it('patchVacancyCore PATCHes /vacancy/{id} with only the core (non-hours) fields', async () => {
+  it('patchVacancyCore PATCHes /vacancy/{id} with the core fields, hours included', async () => {
     vi.mocked(httpClient.patch).mockResolvedValue(vacancy);
-
-    const result = await vacancyApi.patchVacancyCore('vacancy-1', {
+    const body = {
       jobTitle: 'Updated title',
-      category: 'ENGINEERING',
+      language: 'EN' as const,
+      category: 'ENGINEERING' as const,
       location: { country: 'NL', city: 'Utrecht' },
-      workplaceType: 'REMOTE',
-    });
+      workplaceType: 'REMOTE' as const,
+      minHoursPerWeek: 32,
+      maxHoursPerWeek: 40,
+    };
 
-    expect(httpClient.patch).toHaveBeenCalledWith('/vacancy/vacancy-1', {
-      jobTitle: 'Updated title',
-      category: 'ENGINEERING',
-      location: { country: 'NL', city: 'Utrecht' },
-      workplaceType: 'REMOTE',
-    });
+    const result = await vacancyApi.patchVacancyCore('vacancy-1', body);
+
+    expect(httpClient.patch).toHaveBeenCalledWith('/vacancy/vacancy-1', body);
     expect(result).toEqual(vacancy);
   });
 
@@ -66,7 +66,7 @@ describe('vacancyApi', () => {
 
     const body = {
       contactPerson: { name: 'Jane Doe', email: 'jane@example.com' },
-      offer: { salaryMin: 3000, salaryMax: 4000, currency: 'EUR', salaryPeriod: 'MONTHLY' as const },
+      offer: { salaryMin: 3000, salaryMax: 4000, currency: 'EUR' as const, salaryPeriod: 'MONTHLY' as const },
     };
 
     const result = await vacancyApi.patchVacancyContactOffer('vacancy-1', body);
@@ -75,13 +75,13 @@ describe('vacancyApi', () => {
     expect(result).toEqual(vacancy);
   });
 
-  it('publishVacancy POSTs to /vacancy/{id}/publish', async () => {
+  it('publishVacancy POSTs a PUBLISH action to /vacancy/{id}/transitions', async () => {
     const published = { ...vacancy, status: 'PUBLISHED' } as unknown as VacancyResponse;
     vi.mocked(httpClient.post).mockResolvedValue(published);
 
     const result = await vacancyApi.publishVacancy('vacancy-1');
 
-    expect(httpClient.post).toHaveBeenCalledWith('/vacancy/vacancy-1/publish', undefined);
+    expect(httpClient.post).toHaveBeenCalledWith('/vacancy/vacancy-1/transitions', { action: 'PUBLISH' });
     expect(result).toEqual(published);
   });
 });

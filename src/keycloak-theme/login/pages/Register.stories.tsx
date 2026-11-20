@@ -52,9 +52,15 @@ export const EmailAlreadyExists: Story = {
   },
 };
 
+/** A realm that puts the password on the register form ("Always set password on register form"). */
+export const PasswordOnForm: Story = {
+  args: { kcContext: { passwordRequired: true } },
+};
+
 export const PasswordPolicyViolation: Story = {
   args: {
     kcContext: {
+      passwordRequired: true,
       profile: { attributesByName: filledIn },
       messagesPerField: serverErrors({ password: 'Je wachtwoord heeft minimaal 12 tekens nodig.' }),
     },

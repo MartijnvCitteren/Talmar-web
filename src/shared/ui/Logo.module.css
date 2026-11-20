@@ -1,31 +1,32 @@
+/* Proportions come from the official lockup (388 × 116): the wordmark sits beside the icon. */
 .logo {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
 }
 
-.symbol,
-.lockup {
+.symbol {
   display: block;
+  width: var(--logo-size);
   height: var(--logo-size);
 }
 
-.symbol {
-  width: var(--logo-size);
-}
-
-/* The lockup artwork is 388 × 116: the wordmark sits to the right of the icon. */
 .lockup {
+  display: block;
+  height: var(--logo-size);
   width: calc(var(--logo-size) * 388 / 116);
 }
 
-.square {
-  fill: var(--logo-square);
+.tile {
+  fill: var(--logo-tile);
 }
 
 .glyph {
   fill: none;
   stroke: var(--logo-glyph);
+  stroke-width: 16;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .dotRing {

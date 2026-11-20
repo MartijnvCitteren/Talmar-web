@@ -51,7 +51,7 @@ describe('AppShell', () => {
     const menu = screen.getByRole('menu', { name: 'Accountmenu' });
     expect(menu).toBeInTheDocument();
     expect(screen.getByText('Merel Janssen')).toBeInTheDocument();
-    expect(within(menu).getByText('Talmar')).toBeInTheDocument();
+    expect(within(menu).getByText('Taldo')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Account' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Instellingen' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Support' })).toBeInTheDocument();

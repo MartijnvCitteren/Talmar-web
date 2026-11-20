@@ -1,0 +1,47 @@
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-card);
+  background: var(--status-passed-bg);
+  color: var(--action-primary);
+}
+
+.sentTo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* The address carries the page: the likeliest reason a mail doesn't arrive is a typo in it. */
+.address {
+  font-size: var(--text-title-size);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--text-title-line);
+  letter-spacing: var(--tracking-snug);
+  overflow-wrap: anywhere;
+}
+
+.resend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  font-size: var(--text-ui-size);
+  line-height: var(--line-snug);
+}
+
+.resendText {
+  color: var(--text-secondary);
+}
+
+.resendLink {
+  align-self: flex-start;
+  color: var(--text-link);
+  font-weight: var(--font-weight-semibold);
+}

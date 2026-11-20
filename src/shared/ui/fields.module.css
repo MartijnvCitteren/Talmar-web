@@ -6,6 +6,7 @@
 
 .label {
   font-size: var(--text-ui-size);
+  line-height: var(--line-snug);
   color: var(--text-secondary);
 }
 
@@ -31,8 +32,8 @@
   max-width: 100%;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-control);
-  border: 1px solid var(--border-hairline);
-  background: var(--surface-card);
+  border: 1px solid var(--border-input);
+  background: var(--surface-input);
   color: var(--text-primary);
   font: inherit;
   transition: var(--transition-hover);
@@ -144,4 +145,5 @@ select.controlWithSuffix {
   margin: 0;
   color: var(--text-error);
   font-size: var(--text-caption-size);
+  line-height: var(--line-snug);
 }

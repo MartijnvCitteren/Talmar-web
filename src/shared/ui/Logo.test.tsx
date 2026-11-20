@@ -11,27 +11,28 @@ describe('Logo', () => {
       </>,
     );
 
-    expect(screen.getAllByRole('img', { name: 'Talmar' })).toHaveLength(2);
+    expect(screen.getAllByRole('img', { name: 'Taldo' })).toHaveLength(2);
   });
 
-  it('draws the Talmar icon: the "t" glyph and the violet dot on the teal square', () => {
+  it('draws the official Taldo icon: a "t" with a dot on a rounded tile', () => {
     const { container } = render(<Logo />);
 
-    expect(container.querySelector('[data-part="square"]')).not.toBeNull();
-    expect(container.querySelectorAll('[data-part="glyph"]')).toHaveLength(2);
-    expect(container.querySelector('[data-part="dot"]')).not.toBeNull();
+    expect(container.querySelector('rect[rx="29"]')).not.toBeNull();
+    expect(container.querySelectorAll('circle')).toHaveLength(2);
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 116 116');
   });
 
-  it('adds the wordmark only in the lockup', () => {
+  it('adds the outlined wordmark only in the lockup', () => {
     const { container, rerender } = render(<Logo />);
     expect(container.querySelector('[data-part="wordmark"]')).toBeNull();
 
     rerender(<Logo variant="lockup" />);
     expect(container.querySelector('[data-part="wordmark"]')).not.toBeNull();
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 388 116');
   });
 
-  it('sizes the logo from the design-system size scale', () => {
+  it('sizes the icon from the design-system size scale', () => {
     render(<Logo size={48} />);
-    expect(screen.getByRole('img', { name: 'Talmar' })).toHaveStyle({ '--logo-size': '48px' });
+    expect(screen.getByRole('img', { name: 'Taldo' })).toHaveStyle({ '--logo-size': '48px' });
   });
 });

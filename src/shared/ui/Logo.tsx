@@ -1,22 +1,34 @@
 import type { CSSProperties } from 'react';
+import { WORDMARK_PATH } from './logo-wordmark';
 import styles from './Logo.module.css';
 
-/** The symbol sizes the design system allows (px). */
+/** The icon heights the design system allows (px). */
 export type LogoSize = 28 | 48 | 72 | 112 | 168;
 
 export interface LogoProps {
-  /** `symbol` is the icon alone; `lockup` pairs it with the "Talmar" wordmark. */
+  /** `symbol` is the app icon alone; `lockup` pairs it with the "Taldo" wordmark. */
   variant?: 'symbol' | 'lockup';
-  /** Height of the icon; the lockup's wordmark scales with it. */
+  /** Height of the icon; the lockup is as high as the icon and grows to the right. */
   size?: LogoSize;
   className?: string;
 }
 
+/** The official Taldo icon (`design/taldo-logo/svg/taldo-icon.svg`): a "t" with a dot on a tile. */
+function Icon() {
+  return (
+    <>
+      <rect className={styles.tile} width="116" height="116" rx="29" />
+      <path className={styles.glyph} d="M48 19 V71 C48 89 57 96 68 96 C74 96 79 94 82 90" />
+      <path className={styles.glyph} d="M28 43 H59" />
+      <circle className={styles.dotRing} cx="83" cy="43" r="13" />
+      <circle className={styles.dot} cx="83" cy="43" r="10" />
+    </>
+  );
+}
+
 /**
- * The Talmar logo, drawn inline from the official artwork (design/talmar-logo/svg,
- * talmar-icon.svg and talmar-lockup.svg): a "t" and a violet dot on a teal rounded square,
- * with the outlined wordmark in the lockup. Colours come from tokens (--logo-*), which match
- * the artwork's hex values exactly.
+ * Taldo logo, drawn inline from the official vectors rather than via <img>, so its colors come
+ * from the design tokens and the wordmark (outlined paths) never waits on a webfont.
  */
 export function Logo({ variant = 'symbol', size = 28, className }: LogoProps) {
   const isLockup = variant === 'lockup';
@@ -27,7 +39,7 @@ export function Logo({ variant = 'symbol', size = 28, className }: LogoProps) {
       className={[styles.logo, className].filter(Boolean).join(' ')}
       style={style}
       role="img"
-      aria-label="Talmar"
+      aria-label="Taldo"
     >
       <svg
         className={isLockup ? styles.lockup : styles.symbol}
@@ -35,24 +47,9 @@ export function Logo({ variant = 'symbol', size = 28, className }: LogoProps) {
         aria-hidden="true"
         focusable="false"
       >
-        <rect data-part="square" className={styles.square} width="116" height="116" rx="29" />
-        <path
-          data-part="glyph"
-          className={styles.glyph}
-          d="M48 19 V71 C48 89 57 96 68 96 C74 96 79 94 82 90"
-          strokeWidth="16"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path data-part="glyph" className={styles.glyph} d="M28 43 H59" strokeWidth="16" strokeLinecap="round" />
-        <circle className={styles.dotRing} cx="83" cy="43" r="13" />
-        <circle data-part="dot" className={styles.dot} cx="83" cy="43" r="10" />
-        {isLockup && <path data-part="wordmark" className={styles.wordmark} d={WORDMARK} />}
+        <Icon />
+        {isLockup && <path className={styles.wordmark} data-part="wordmark" d={WORDMARK_PATH} />}
       </svg>
     </span>
   );
 }
-
-/** "Talmar", outlined, from talmar-lockup.svg. */
-const WORDMARK =
-  'M148.3203125 41.93359375H164.17578125V84.19140625H176.55078125V41.93359375H192.40625V31.80859375H148.3203125ZM203.06 84.89453125C208.50921875 84.89453125 212.30609375 82.71484375 214.450625 78.671875H214.76703125V84.19140625H226.29828125V57.5078125C226.29828125 49.0703125 218.5990625 44.39453125 208.825625 44.39453125C198.981875 44.39453125 192.794375 49.0 191.2475 55.71484375L202.356875 57.15625C203.02484375 54.6953125 205.31 53.11328125 208.72015625 53.11328125C212.06 53.11328125 214.06390625 54.66015625 214.06390625 57.3671875V57.5078125C214.06390625 59.93359375 211.39203125 60.42578125 204.7475 60.98828125C196.8021875 61.65625 190.1225 64.57421875 190.1225 73.29296875C190.1225 81.0625 195.50140625 84.89453125 203.06 84.89453125ZM206.7865625 76.7734375C203.8334375 76.7734375 201.7240625 75.3671875 201.7240625 72.73046875C201.7240625 70.12890625 203.763125 68.58203125 207.38421875 68.0546875C209.669375 67.703125 212.763125 67.17578125 214.169375 66.4375V70.19921875C214.169375 74.06640625 210.89984375 76.7734375 206.7865625 76.7734375ZM245.24890625 31.80859375H232.979375V84.19140625H245.24890625ZM251.93 84.19140625H264.19953125V60.84765625C264.19953125 56.734375 266.555 54.37890625 269.89484375 54.37890625C273.164375 54.37890625 275.37921875 56.6640625 275.37921875 60.28515625V84.19140625H287.1565625V60.6015625C287.1565625 56.83984375 289.30109375 54.37890625 292.7815625 54.37890625C296.0159375 54.37890625 298.30109375 56.48828125 298.30109375 60.4609375V84.19140625H310.570625V57.68359375C310.570625 49.38671875 305.33234375 44.359375 297.9846875 44.359375C292.67609375 44.359375 287.61359375 47.03125 285.22296875 53.46484375C283.289375 47.03125 280.09015625 44.359375 275.09796875 44.359375C270.351875 44.359375 265.95734375 46.78515625 263.77765625 52.69140625L263.21515625 44.88671875H251.93ZM328.255625 84.89453125C333.70484375 84.89453125 337.50171875 82.71484375 339.64625 78.671875H339.96265625V84.19140625H351.49390625V57.5078125C351.49390625 49.0703125 343.7946875 44.39453125 334.02125 44.39453125C324.1775 44.39453125 317.99 49.0 316.443125 55.71484375L327.5525 57.15625C328.22046875 54.6953125 330.505625 53.11328125 333.91578125 53.11328125C337.255625 53.11328125 339.25953125 54.66015625 339.25953125 57.3671875V57.5078125C339.25953125 59.93359375 336.58765625 60.42578125 329.943125 60.98828125C321.9978125 61.65625 315.318125 64.57421875 315.318125 73.29296875C315.318125 81.0625 320.69703125 84.89453125 328.255625 84.89453125ZM331.9821875 76.7734375C329.0290625 76.7734375 326.9196875 75.3671875 326.9196875 72.73046875C326.9196875 70.12890625 328.95875 68.58203125 332.57984375 68.0546875C334.865 67.703125 337.95875 67.17578125 339.365 66.4375V70.19921875C339.365 74.06640625 336.09546875 76.7734375 331.9821875 76.7734375ZM358.17499999999995 84.19140625H370.44453124999995V62.74609375C370.44453124999995 58.03515625 373.78437499999995 54.87109375 378.31953124999995 54.87109375C379.79609374999995 54.87109375 382.01093749999995 55.1171875 383.17109374999995 55.50390625V44.81640625C382.15156249999995 44.5703125 380.85078124999995 44.39453125 379.69062499999995 44.39453125C375.36640624999995 44.39453125 371.92109374999995 46.890625 370.51484374999995 52.05859375H370.09296874999995V44.88671875H358.17499999999995Z';

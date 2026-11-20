@@ -1,6 +1,6 @@
-# Talmar Web
+# Taldo Web
 
-Frontend for Talmar ([talmar.eu](https://talmar.eu)).
+Frontend for Taldo ([taldo.eu](https://taldo.eu)).
 
 Vacancy-creation flow (GitHub issue #4) — Vite + React 19 + TypeScript, Feature-Sliced
 Design. Local-dev-only pass; see `specs/spec.md` for the full scope and
@@ -25,7 +25,7 @@ Opens the app against the API base URL in `public/config.json` (defaults to
 - `npm run e2e` — Playwright (`create-vacancy` happy path, mocked backend).
 - `npm run storybook` — Storybook (currently the Keycloak theme pages).
 - `npm run build-keycloak-theme` — builds the app and the Keycloak login theme JAR
-  (`dist_keycloak/talmar-keycloak-theme.jar`); see `src/keycloak-theme/README.md`.
+  (`dist_keycloak/taldo-keycloak-theme.jar`); see `src/keycloak-theme/README.md`.
 - `npm run generate:api` — regenerates `src/shared/api/generated/vacancy-api.ts` from
   `specs/vacancy.yml`. Run this whenever the OpenAPI contract changes; the output is
   committed, so nobody needs to run it just to build.

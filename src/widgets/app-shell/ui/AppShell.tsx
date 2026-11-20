@@ -88,7 +88,7 @@ export function AppShell({ children }: AppShellProps) {
               <ul className={styles.accountMenu} role="menu" aria-label="Accountmenu">
                 <li className={styles.accountMenuHeader}>
                   <div className={styles.accountMenuName}>Merel Janssen</div>
-                  <div className={styles.accountMenuOrg}>Talmar</div>
+                  <div className={styles.accountMenuOrg}>Taldo</div>
                 </li>
                 {accountMenuItems.map(({ label, Icon }) => (
                   <li key={label} role="none">

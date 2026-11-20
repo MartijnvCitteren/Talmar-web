@@ -1,0 +1,265 @@
+openapi: 3.1.1
+info:
+  title: Taldo Identity API
+  description: >
+    API for accounts in Taldo. Registration, e-mail verification, login and passwords are handled by the identity
+    provider (Keycloak, ADR 0006), not by this API. After the first login, the frontend calls `POST /onboarding` to
+    give the account its Taldo user and company. `PATCH /me` changes the user's names.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Onboarding
+    description: >
+      The first step after the first login. The e-mail domain of the verified account decides the company: the first
+      user of a domain creates the company and becomes its owner, later users join it after the owner approves them.
+      The company starts with a name derived from the e-mail domain (`acme-logistics.nl` becomes `Acme-logistics`);
+      its users can correct the name later.
+  - name: Profile
+    description: The logged-in user's own profile.
+
+paths:
+  /onboarding:
+    post:
+      operationId: onboard
+      tags: [Onboarding]
+      summary: Onboard the logged-in account
+      description: >
+        Creates the Taldo user of the logged-in account, and its company when the account is the first of its e-mail
+        domain. Names and e-mail address come from the verified account, not from the request. The resulting status
+        tells the frontend what to show: `ACTIVE` for the owner of a new company, `PENDING_APPROVAL` for a user who
+        joined an existing company and waits for its owner.
+
+
+        Safe to repeat. A `503` means onboarding stopped halfway: call it again, with the same body, until it
+        answers `200`. A call after onboarding has finished answers `409` and changes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingRequest'
+            examples:
+              recruiter:
+                summary: A recruiter onboards after their first login
+                value:
+                  jobRole: RECRUITER
+      responses:
+        '200':
+          description: Onboarded, or an interrupted onboarding finished.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: >
+            The account may not onboard: its e-mail address is not verified, or it is on a public mail domain
+            (gmail, outlook, hotmail, proton, ...). Only work addresses create or join a company. Nothing is saved.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: The account has already been onboarded; nothing changes.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          description: >
+            The identity provider is unavailable. Onboarding may have stopped halfway; calling it again finishes it.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /me:
+    patch:
+      operationId: changeName
+      tags: [Profile]
+      summary: Change the logged-in user's names
+      description: >
+        Changes the first and/or last name of the logged-in user, in Taldo and at the identity provider, so the
+        login page and its mails use the new name too. Send only the names that change; an omitted or `null` name
+        stays as it is, and a body without names changes nothing. The e-mail address cannot be changed: it decides
+        the company.
+
+
+        Safe to repeat. A `503` means nothing has changed; try again later. The account must have been onboarded
+        (`POST /onboarding`) first, otherwise `404`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameChangeRequest'
+            examples:
+              bothNames:
+                summary: A user corrects both names
+                value:
+                  firstName: José
+                  lastName: "'t Hooft"
+              lastNameOnly:
+                summary: A user takes a new last name
+                value:
+                  lastName: van den Berg
+      responses:
+        '204':
+          description: Names changed, or nothing to change.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: The account has not been onboarded yet; call `POST /onboarding` first.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          description: The identity provider is unavailable. Nothing has changed; try again later.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        An access token from the identity provider (Keycloak realm `taldo`, client `taldo-web`, authorization code
+        with PKCE).
+
+  responses:
+    Unauthorized:
+      description: >
+        No access token, or an expired or invalid one. The body is empty. `WWW-Authenticate` is `Bearer` without a
+        token and `Bearer error="invalid_token"` with a rejected one; it does not say why a token was rejected. Log in
+        again.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+    BadRequest:
+      description: The request was malformed or failed validation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    UnsupportedMediaType:
+      description: >
+        The request body has a `Content-Type` this operation does not accept, or none at all. The
+        `Accept` header lists the content types it does accept; send the body again with one of
+        them. Nothing has changed.
+      headers:
+        Accept:
+          description: The content types this operation accepts for its request body.
+          schema:
+            type: string
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    InternalServerError:
+      description: An unexpected error occurred while processing the request.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+    JobRole:
+      type: string
+      description: The user's role, asked when they sign up. A profile field, not a right.
+      enum: [RECRUITER, HIRING_MANAGER, HR, FOUNDER_OR_DIRECTOR, OTHER]
+
+    OnboardingRequest:
+      type: object
+      required: [jobRole]
+      properties:
+        jobRole:
+          $ref: '#/components/schemas/JobRole'
+
+    NameChangeRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 35
+          pattern: '^(?=.*\p{L})[\p{L}\p{M}''’.-]+( [\p{L}\p{M}''’.-]+)*$'
+          description: >
+            The new first name; omit it to keep the current one. 1 to 35 characters, the length the UK Government
+            Data Standards Catalogue uses for given and family names. Letters of any script (with their accents and
+            other combining marks), spaces, hyphens, apostrophes and periods, with at least one letter: `José`,
+            `Anne-Marie`, `'t Hooft`, `O’Brien`, `St. John`. Digits and symbols are rejected. No leading, trailing or
+            double spaces. The same rules as on the registration page.
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 35
+          pattern: '^(?=.*\p{L})[\p{L}\p{M}''’.-]+( [\p{L}\p{M}''’.-]+)*$'
+          description: The new last name; omit it to keep the current one. The same rules as `firstName`.
+
+    OnboardingResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+
+    AccountStatus:
+      type: string
+      description: >
+        `ACTIVE`: the account can be used. `PENDING_APPROVAL`: the user joined an existing company and waits for its
+        owner to approve them.
+      enum: [ACTIVE, PENDING_APPROVAL]
+
+    ProblemDetails:
+      type: object
+      description: RFC 9457 Problem Details for HTTP APIs.
+      required: [title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+          default: about:blank
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        errors:
+          type: array
+          description: Extension member listing field-level validation failures, when applicable.
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string

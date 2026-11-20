@@ -1,6 +1,6 @@
 # Plan: Vacancy creation frontend (feature slug: `vacancy-creation`)
 
-Status: FINAL — ready for `talmar-web-developer`. **Revised 2026-09-20** for
+Status: FINAL — ready for `taldo-web-developer`. **Revised 2026-09-20** for
 design-parity with the real, high-fidelity handoff (see §10 below) — §1-9 are the
 original architecture pass and remain valid except where §10 explicitly supersedes them.
 **Further revised 2026-09-25** for a PO-reported fine-tuning pass on the shipped,
@@ -9,7 +9,7 @@ supersedes them.
 Source spec: `specs/spec.md` (GitHub issue #4). Design source: `specs/design-notes.md`
 (now VERIFIED, see its own status line — supersedes its own 2026-09-19 approximate
 capture).
-Contract: `specs/vacancy.yml` (OpenAPI 3.1.1, `talmar-contracts` VacancyApi, copied as-of 2026-09-19).
+Contract: `specs/vacancy.yml` (OpenAPI 3.1.1, `taldo-contracts` VacancyApi, copied as-of 2026-09-19).
 Task list: `specs/tasks.md` (Speckit-style task IDs T001-T043, this plan is their source of truth).
 Companion ADRs: `.claude/adr/0001-runtime-config-mechanism.md`,
 `.claude/adr/0002-hours-per-week-edit-after-creation.md`,
@@ -17,7 +17,7 @@ Companion ADRs: `.claude/adr/0001-runtime-config-mechanism.md`,
 `.claude/adr/0005-holiday-period-input.md`.
 
 This file is also mirrored at `.claude/planning/vacancy-creation.md` for
-`talmar-web-developer`'s workflow, which reads plans from that fixed path. If the two
+`taldo-web-developer`'s workflow, which reads plans from that fixed path. If the two
 ever diverge, `specs/plan.md` is the source of truth — copy forward into the mirror.
 
 ---
@@ -26,7 +26,7 @@ ever diverge, `specs/plan.md` is the source of truth — copy forward into the m
 
 Before laying out FSD slices: `specs/vacancy.yml` has two things that change what's
 buildable in this pass. Both are cross-team contract issues, not FE bugs — flag upstream
-to `talmar-contracts`/backend, don't try to route around them cleverly client-side.
+to `taldo-contracts`/backend, don't try to route around them cleverly client-side.
 
 1. **`VacancyUpdateRequest` (the `PATCH /vacancy/{id}` body) cannot carry hours-per-week.**
    `VacancyCoreRequest` and `VacancyResponse` both use `minHoursPerWeek`/`maxHoursPerWeek`,
@@ -431,7 +431,7 @@ implementation tasks (all traceable to this section); T033 is the single trailin
 ## 11. Fine-tuning pass (2026-09-25)
 
 Trigger: the PO (Martijn) browser-tested the shipped, design-parity build (open PR
-`MartijnvCitteren/Talmar-web#5`, `feature/4-redesign-vacancy-creation`) and reported
+`MartijnvCitteren/Taldo-web#5`, `feature/4-redesign-vacancy-creation`) and reported
 5 issues. Root causes below are diagnosed against the actual current code, not
 guessed. This is a **polish pass** — no new screens, no new FSD slices; T034-T042 rework
 existing slices in place, T043 is this pass's own single review gate.
@@ -503,7 +503,7 @@ existing slices in place, T043 is this pass's own single review gate.
       Contract gap — `Offer.numberOfHolidays` is a bare `number | null`, "Full-time-
       equivalent holiday days… never pre-computed/prorated server-side", no period
       field. Resolved by **ADR-0005** (client-side conversion to annual FTE days before
-      the API call; upstream `talmar-contracts` ask filed in `open-questions.md`).
+      the API call; upstream `taldo-contracts` ask filed in `open-questions.md`).
 
 5. **Overzicht (step 4)**, `features/review-vacancy/ui/ReviewVacancy.tsx`:
    a. Meta line (`{category} · {city} · {workplaceType}`) lacks weekly hours.
@@ -586,7 +586,7 @@ and nothing in the current code defends against it. This matches the PO's exact 
 No new endpoints and no contract change required to ship this pass. `numberOfHolidays`
 is still sent as a single annual-FTE number — the client converts week/month → annual
 before the existing `patchVacancyContactOffer` call (ADR-0005). The upstream
-`talmar-contracts` ask (a `holidayPeriod` field on `Offer`, mirroring `SalaryPeriod`'s
+`taldo-contracts` ask (a `holidayPeriod` field on `Offer`, mirroring `SalaryPeriod`'s
 shape) is flagged in `specs/open-questions.md`, not blocking this pass.
 
 ### 11.5 Test plan additions

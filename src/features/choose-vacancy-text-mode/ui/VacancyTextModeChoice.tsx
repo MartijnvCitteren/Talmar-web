@@ -16,7 +16,7 @@ export function VacancyTextModeChoice({ mode, onModeChange, onNext }: VacancyTex
       <Card>
         <CardHeader
           title="Vacaturetekst"
-          description="Schrijf de tekst zelf, of laat Talmar een concept opstellen op basis van een paar korte vragen."
+          description="Schrijf de tekst zelf, of laat Taldo een concept opstellen op basis van een paar korte vragen."
         />
         <div className={styles.grid}>
           <ChoiceCard
@@ -28,8 +28,8 @@ export function VacancyTextModeChoice({ mode, onModeChange, onNext }: VacancyTex
           />
           <ChoiceCard
             icon={<Sparkles size={22} aria-hidden="true" />}
-            title="Talmar stelt een concept op"
-            body="Beantwoord drie korte vragen en Talmar schrijft een concept voor je."
+            title="Taldo stelt een concept op"
+            body="Beantwoord drie korte vragen en Taldo schrijft een concept voor je."
             selected={mode === 'ai'}
             onSelect={() => onModeChange('ai')}
             variant="advice"

@@ -1,0 +1,26 @@
+/* Shared by the ejected Keycloak pages: heading block, form column, footer links. */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.lede {
+  color: var(--text-secondary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.submit {
+  width: 100%;
+  margin-top: var(--space-1);
+}
+
+.link {
+  color: var(--text-link);
+  font-weight: var(--font-weight-semibold);
+}

@@ -15,7 +15,7 @@ export function PublishedConfirmation({ vacancyTitle, onBackToOverview, onViewVa
         <CircleCheck size={28} aria-hidden="true" />
       </div>
       <h1>Vacature gepubliceerd</h1>
-      <p>&ldquo;{vacancyTitle}&rdquo; staat live op je Talmar-pagina.</p>
+      <p>&ldquo;{vacancyTitle}&rdquo; staat live op je Taldo-pagina.</p>
       <div className={styles.actions}>
         <Button type="button" variant="secondary" onClick={onBackToOverview}>
           Terug naar overzicht

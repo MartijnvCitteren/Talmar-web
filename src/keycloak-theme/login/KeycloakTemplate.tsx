@@ -1,7 +1,7 @@
 /**
  * Keycloakify's default login Template, ejected (npx keycloakify eject-page → Template.tsx)
- * for one change: the header shows the Talmar logo instead of the realm name. Used by the
- * pages that aren't rebuilt in the Talmar Template yet; fallback.css styles the rest.
+ * for one change: the header shows the Taldo logo instead of the realm name. Used by the
+ * pages that aren't rebuilt in the Taldo Template yet; fallback.css styles the rest.
  * Formatting is kept as upstream so it can be diffed against new Keycloakify versions.
  */
 import { useEffect } from "react";
@@ -63,7 +63,7 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
         <div className={kcClsx("kcLoginClass")}>
             <div id="kc-header" className={kcClsx("kcHeaderClass")}>
                 <div id="kc-header-wrapper" className={kcClsx("kcHeaderWrapperClass")}>
-                    {/* Talmar: the logo instead of Keycloak's realm-name heading. */}
+                    {/* Taldo: the logo instead of Keycloak's realm-name heading. */}
                     <Logo variant="lockup" size={48} />
                 </div>
             </div>

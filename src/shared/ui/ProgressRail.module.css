@@ -1,0 +1,40 @@
+.rail {
+  --bar-height: 4px;
+}
+
+.summary {
+  margin-bottom: var(--space-1);
+  color: var(--text-secondary);
+  font-size: var(--text-caption-size);
+  font-weight: var(--font-weight-semibold);
+}
+
+.list {
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  flex: 1;
+  height: var(--bar-height);
+  border-radius: var(--radius-pill);
+  background: var(--border-hairline);
+}
+
+.step[data-status='done'],
+.step[data-status='current'] {
+  background: var(--action-primary);
+}
+
+/* The bar shows the steps; their names are for screen readers. */
+.text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}

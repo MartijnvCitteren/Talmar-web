@@ -1,0 +1,95 @@
+.page {
+  min-height: 100dvh;
+  background: var(--surface-page);
+}
+
+.primary {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.body {
+  width: 100%;
+  max-width: var(--form-max);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-3) var(--space-5);
+}
+
+.progress {
+  margin-bottom: var(--space-4);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.footer {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  font-size: var(--text-ui-size);
+}
+
+.aside {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .body {
+    padding-top: var(--space-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .body {
+    padding-top: var(--space-6);
+  }
+
+  /* Task on the left, the panel on the right: a little narrower, fixed while the task scrolls. */
+  .page[data-has-aside='true'] {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .page[data-has-aside='true'] .body {
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-top: var(--space-5);
+  }
+
+  /* The teal runs the full height of the page; its content stays in view while the task scrolls. */
+  .aside {
+    display: block;
+    overflow: clip;
+    background: var(--action-primary);
+    color: var(--text-on-accent);
+  }
+
+  .asideContent {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    height: 100dvh;
+    padding: var(--space-6) var(--space-5);
+    overflow: hidden;
+  }
+}

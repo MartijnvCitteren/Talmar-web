@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DeepPartial } from 'keycloakify/tools/DeepPartial';
 import type { KcContext } from '../KcContext';
@@ -26,8 +26,6 @@ function serverErrors(errors: Record<string, string>) {
   };
 }
 
-const next = () => screen.getByRole('button', { name: 'Volgende' });
-
 /**
  * For each form submit: whether the page let it through to Keycloak. Listens on window, so it
  * runs after React's handler; then stops the post itself, since jsdom can't navigate.
@@ -51,125 +49,128 @@ afterEach(() => {
   }
 });
 
+const submit = () => screen.getByRole('button', { name: 'Account aanmaken' });
+
+async function fillIn(user: ReturnType<typeof userEvent.setup>, email = 'sanne@bedrijf.nl') {
+  await user.type(await screen.findByLabelText('Voornaam'), 'Zoë');
+  await user.type(screen.getByLabelText('Achternaam'), "'t Hooft");
+  await user.type(screen.getByLabelText('Werkmailadres'), email);
+}
+
 describe('Register', () => {
-  it('opens on the first question, in Dutch by default', async () => {
+  it('asks for name and work email on one screen, in Dutch by default, without a password', async () => {
     renderRegister();
 
-    expect(await screen.findByRole('heading', { name: 'Hoe heet je?' })).toBeInTheDocument();
-    expect(screen.getByText('Stap 1 van 4')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Maak je account aan' })).toBeInTheDocument();
     expect(screen.getByLabelText('Voornaam')).toHaveAttribute('autocomplete', 'given-name');
+    expect(screen.getByLabelText('Achternaam')).toHaveAttribute('autocomplete', 'family-name');
+    expect(screen.getByLabelText('Werkmailadres')).toHaveAccessibleDescription('Hiermee koppelen we je aan je bedrijf.');
+    expect(screen.queryByLabelText('Wachtwoord')).not.toBeInTheDocument();
   });
 
-  it('keeps you on the step and explains what is missing when the field is empty', async () => {
+  it('shows the sign-up steps with this one current', async () => {
+    renderRegister();
+
+    const steps = await screen.findByRole('navigation', { name: 'Je aanmelding' });
+    expect(within(steps).getAllByRole('listitem')).toHaveLength(4);
+    expect(within(steps).getByText('Je gegevens').closest('li')).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('blocks an empty form, explains every missing field and focuses the first', async () => {
     const { user } = renderRegister();
-    await screen.findByRole('heading', { name: 'Hoe heet je?' });
+    await screen.findByLabelText('Voornaam');
+    const posted = recordPosts();
 
-    await user.click(next());
+    await user.click(submit());
 
-    expect(screen.getByRole('heading', { name: 'Hoe heet je?' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Voornaam')).toHaveAttribute('aria-invalid', 'true');
+    expect(posted).toEqual([false]);
     expect(screen.getByLabelText('Voornaam')).toHaveAccessibleDescription('Vul dit veld nog even in.');
+    expect(screen.getByLabelText('Achternaam')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Voornaam')).toHaveFocus();
   });
 
-  it('accepts a real name (the realm pattern uses Java-only \\p{L}) and moves on; the arrow goes back', async () => {
+  it('fills in the account badge as you type, with the company taken from the mail domain', async () => {
     const { user } = renderRegister();
-    await user.type(await screen.findByLabelText('Voornaam'), 'Zoë');
+    const badge = await screen.findByRole('figure', { name: 'Voorbeeld van je account' });
+    expect(within(badge).getByText('Je naam')).toBeInTheDocument();
+    expect(within(badge).getByText('Je bedrijf')).toBeInTheDocument();
 
-    await user.click(next());
+    await fillIn(user, 'zoe@acme-logistics.nl');
 
-    expect(screen.getByRole('heading', { name: 'En je achternaam?' })).toBeInTheDocument();
-    expect(screen.getByText('Stap 2 van 4')).toBeInTheDocument();
-    expect(screen.getByLabelText('Achternaam')).toHaveFocus();
-
-    await user.click(screen.getByRole('button', { name: 'Vorige stap' }));
-
-    expect(screen.getByRole('heading', { name: 'Hoe heet je?' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Voornaam')).toHaveValue('Zoë');
+    expect(within(badge).getByText("Zoë 't Hooft")).toBeInTheDocument();
+    expect(within(badge).getByText('Acme-logistics')).toBeInTheDocument();
+    expect(within(badge).getByText('ZH')).toBeInTheDocument();
   });
 
-  it('asks for a work email and turns down public mail providers right at that step', async () => {
+  it('previews no company for a public mail provider', async () => {
     const { user } = renderRegister();
-    await user.type(await screen.findByLabelText('Voornaam'), 'Sanne');
-    await user.click(next());
-    await user.type(screen.getByLabelText('Achternaam'), 'de Vries');
-    await user.click(next());
+    await fillIn(user, 'zoe@gmail.com');
 
-    expect(screen.getByRole('heading', { name: 'Wat is je werkmailadres?' })).toBeInTheDocument();
-    await user.type(screen.getByLabelText('E-mailadres'), 'sanne@Gmail.com');
-    await user.click(next());
+    const badge = screen.getByRole('figure', { name: 'Voorbeeld van je account' });
+    expect(within(badge).getByText('Je bedrijf')).toBeInTheDocument();
+  });
 
-    expect(screen.getByRole('heading', { name: 'Wat is je werkmailadres?' })).toBeInTheDocument();
-    expect(screen.getByLabelText('E-mailadres')).toHaveAccessibleDescription(
+  it('turns down public mail providers before posting', async () => {
+    const { user } = renderRegister();
+    await fillIn(user, 'sanne@Gmail.com');
+    const posted = recordPosts();
+
+    await user.click(submit());
+
+    expect(posted).toEqual([false]);
+    expect(screen.getByLabelText('Werkmailadres')).toHaveAccessibleDescription(
       'Gebruik je werkmailadres. Adressen van publieke mailproviders kunnen we niet gebruiken.',
     );
+    expect(screen.getByLabelText('Werkmailadres')).toHaveFocus();
   });
 
-  it('moves on with Enter, like the button', async () => {
-    const { user } = renderRegister();
-    await user.type(await screen.findByLabelText('Voornaam'), 'Sanne{Enter}');
-
-    expect(screen.getByRole('heading', { name: 'En je achternaam?' })).toBeInTheDocument();
-  });
-
-  it('shows the password policy and posts every field in one form to Keycloak', async () => {
+  it('accepts real names (the realm pattern uses Java-only \\p{L}) and posts the form to Keycloak', async () => {
     const { user, kcContext } = renderRegister();
-    await user.type(await screen.findByLabelText('Voornaam'), 'Sanne{Enter}');
-    await user.type(screen.getByLabelText('Achternaam'), 'de Vries{Enter}');
-    await user.type(screen.getByLabelText('E-mailadres'), 'sanne@bedrijf.nl{Enter}');
-
-    expect(screen.getByRole('heading', { name: 'Kies een wachtwoord' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Wachtwoord')).toHaveAccessibleDescription('Minimaal 12 tekens.');
-
-    await user.type(screen.getByLabelText('Wachtwoord'), 'lang-genoeg-wachtwoord');
-    await user.type(screen.getByLabelText('Bevestig wachtwoord'), 'lang-genoeg-wachtwoord');
-
+    await fillIn(user);
     const form = document.getElementById('kc-register-form') as HTMLFormElement;
     const posted = recordPosts();
-    await user.click(screen.getByRole('button', { name: 'Account aanmaken' }));
+
+    await user.click(submit());
 
     expect(posted).toEqual([true]);
     expect(form.getAttribute('action')).toBe(kcContext.url.registrationAction);
     expect(Object.fromEntries(new FormData(form))).toMatchObject({
-      firstName: 'Sanne',
-      lastName: 'de Vries',
+      firstName: 'Zoë',
+      lastName: "'t Hooft",
       email: 'sanne@bedrijf.nl',
-      password: 'lang-genoeg-wachtwoord',
-      'password-confirm': 'lang-genoeg-wachtwoord',
     });
   });
 
-  it('shows one message per field: an empty confirmation asks to be filled in, not that it differs', async () => {
-    const { user } = renderRegister();
-    await user.type(await screen.findByLabelText('Voornaam'), 'Sanne{Enter}');
-    await user.type(screen.getByLabelText('Achternaam'), 'de Vries{Enter}');
-    await user.type(screen.getByLabelText('E-mailadres'), 'sanne@bedrijf.nl{Enter}');
+  it('also asks for a password when the realm puts it on the form', async () => {
+    const { user } = renderRegister({ passwordRequired: true });
+    await fillIn(user);
+
+    expect(screen.getByLabelText('Wachtwoord')).toHaveAccessibleDescription('Minimaal 12 tekens.');
     await user.type(screen.getByLabelText('Wachtwoord'), 'lang-genoeg-wachtwoord');
+    const posted = recordPosts();
+    await user.click(submit());
 
-    await user.click(screen.getByRole('button', { name: 'Account aanmaken' }));
-
-    expect(screen.getByLabelText('Bevestig wachtwoord')).toHaveAccessibleDescription('Vul dit veld nog even in.');
-    expect(screen.getByLabelText('Bevestig wachtwoord')).toHaveFocus();
+    // One message per field: an empty confirmation asks to be filled in, not that it differs.
+    expect(posted).toEqual([false]);
+    expect(screen.getByLabelText('Herhaal je wachtwoord')).toHaveAccessibleDescription('Vul dit veld nog even in.');
+    expect(screen.getByLabelText('Herhaal je wachtwoord')).toHaveFocus();
   });
 
-  it('asks to accept the terms on the last step when the realm requires it, and only then submits', async () => {
+  it('asks to accept the terms when the realm requires it, and only then submits', async () => {
     const { user } = renderRegister({ termsAcceptanceRequired: true });
-    await user.type(await screen.findByLabelText('Voornaam'), 'Sanne{Enter}');
-    await user.type(screen.getByLabelText('Achternaam'), 'de Vries{Enter}');
-    await user.type(screen.getByLabelText('E-mailadres'), 'sanne@bedrijf.nl{Enter}');
-    await user.type(screen.getByLabelText('Wachtwoord'), 'lang-genoeg-wachtwoord');
-    await user.type(screen.getByLabelText('Bevestig wachtwoord'), 'lang-genoeg-wachtwoord');
-
+    await fillIn(user);
     const form = document.getElementById('kc-register-form') as HTMLFormElement;
     const posted = recordPosts();
-    await user.click(screen.getByRole('button', { name: 'Account aanmaken' }));
+
+    await user.click(submit());
     await user.click(screen.getByRole('checkbox'));
-    await user.click(screen.getByRole('button', { name: 'Account aanmaken' }));
+    await user.click(submit());
 
     expect(posted).toEqual([false, true]);
     expect(new FormData(form).get('termsAccepted')).toBe('on');
   });
 
-  it('opens on the email step when Keycloak reports the address already exists', async () => {
+  it('focuses the email field when Keycloak reports the address already exists', async () => {
     renderRegister({
       profile: {
         attributesByName: {
@@ -181,8 +182,9 @@ describe('Register', () => {
       messagesPerField: serverErrors({ email: 'Er is al een account met dit e-mailadres.' }),
     });
 
-    expect(await screen.findByRole('heading', { name: 'Wat is je werkmailadres?' })).toBeInTheDocument();
-    expect(screen.getByLabelText('E-mailadres')).toHaveAccessibleDescription('Er is al een account met dit e-mailadres.');
+    const email = await screen.findByLabelText('Werkmailadres');
+    expect(email).toHaveAccessibleDescription('Er is al een account met dit e-mailadres.');
+    expect(email).toHaveFocus();
   });
 
   it('shows a global error from Keycloak as an alert', async () => {
@@ -197,8 +199,9 @@ describe('Register', () => {
   it('speaks English when that is the chosen language', async () => {
     renderRegister({ locale: { currentLanguageTag: 'en' } });
 
-    expect(await screen.findByRole('heading', { name: "What's your first name?" })).toBeInTheDocument();
-    expect(screen.getByText('Step 1 of 4')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Create your account' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Work email')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 4: Your details')).toBeInTheDocument();
   });
 
   it('links back to login', async () => {

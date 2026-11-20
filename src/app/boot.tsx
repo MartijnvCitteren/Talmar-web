@@ -13,7 +13,7 @@ function renderBootFailure(container: Element, error: unknown) {
   const root = createRoot(container);
   root.render(
     <div role="alert">
-      <h1>Talmar kan niet worden gestart.</h1>
+      <h1>Taldo kan niet worden gestart.</h1>
       <p>De applicatieconfiguratie kon niet worden geladen.</p>
       <p>{detail}</p>
     </div>,

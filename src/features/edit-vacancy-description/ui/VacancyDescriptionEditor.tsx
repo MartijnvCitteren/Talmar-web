@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { descriptionApi, type VacancyDescriptionResponse } from '../../../entities/vacancy-description';
 import type { ApiError } from '../../../shared/api';
+import { toUserMessage } from '../../../shared/lib/problem-details';
 import { Button, Card, CardHeader, ErrorBanner, TextField } from '../../../shared/ui';
 
 export interface VacancyDescriptionEditorProps {
@@ -48,7 +49,14 @@ export function VacancyDescriptionEditor({ vacancyId, draft, onSaved }: VacancyD
       onSaved(result);
     } catch (caught) {
       const apiError = caught as ApiError;
-      setError(apiError.detail ?? apiError.title ?? 'Opslaan van de vacaturetekst is mislukt.');
+      setError(
+        toUserMessage(apiError, {
+          fallback: 'Opslaan van de vacaturetekst is niet gelukt. Probeer het zo nog eens.',
+          byStatus: {
+            400: 'De tekst bevat iets wat we niet kunnen opslaan, zoals HTML-tags, of is te lang. Pas de tekst aan en probeer het opnieuw.',
+          },
+        }),
+      );
     } finally {
       setSaving(false);
     }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { extractJavaPatterns, isJavaOnlyPattern, toJsRegExp } from './javaPatterns';
 
-// Copied from the talmar-api realm's User Profile (docker/keycloak/talmar-realm.json).
+// Copied from the taldo-api realm's User Profile (docker/keycloak/taldo-realm.json).
 const PERSON_NAME = "^(?=.*\\p{L})[\\p{L}\\p{M}'’.-]+( [\\p{L}\\p{M}'’.-]+)*$";
 const WORK_EMAIL =
   '(?i)^[^@]+@(?!(?:gmail[.]com|googlemail[.]com|ziggo[.]nl|kpnmail[.]nl)$)(?!(?:outlook|hotmail|live|yahoo|aol|gmx|yandex)[.]).+$';

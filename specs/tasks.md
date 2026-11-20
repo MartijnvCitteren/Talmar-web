@@ -152,7 +152,7 @@ T013, T014, T015, T016, T017, T018.
 **Superseded as the feature's final gate by T033** — this sign-off stands for what it
 reviewed (the original, approximate-design pass) but does not cover T020-T032.
 
-**Reviewed-by: talmar-web-reviewer** — verdict: APPROVE. tsc/eslint/steiger/vitest
+**Reviewed-by: taldo-web-reviewer** — verdict: APPROVE. tsc/eslint/steiger/vitest
 (75/75)/build all verified green independently. No blocking findings; two non-blocking
 suggestions logged in `specs/open-questions.md` (free-text ISO-4217 currency narrowed to a
 9-currency dropdown; email format not validated client-side). All 5 developer-flagged
@@ -202,14 +202,14 @@ Plan: §10.1 item 10, §10.2. Real navbar chrome: lockup logo asset (placeholder
 (new `lucide-react` dependency — note it explicitly) on each nav item, `--content-max:
 840px` inner row, sticky/`z-index: 20` header. Avatar dropdown becomes a real
 interactive menu: opens on click, closes on outside mousedown (`[data-dd]`-equivalent
-pattern), header block "Merel Janssen"/"Talmar", hover states on Account/Instellingen/
+pattern), header block "Merel Janssen"/"Taldo", hover states on Account/Instellingen/
 Support rows — still non-functional beyond open/close (destinations unobserved, per
 open-questions.md #6, unchanged). Tests: menu open/close, outside-click dismissal,
 active nav item styling against real tokens.
 
 **Done.** Added `lucide-react` dependency, real nav icons, interactive account-menu
 (opens on click, closes on outside mousedown via `[data-dd]`), header block with name/org.
-Logo kept as text lockup ("Talmar") — no placeholder asset file existed in
+Logo kept as text lockup ("Taldo") — no placeholder asset file existed in
 `_ds/assets/logo/` to import as a component; flagged for a real-asset swap.
 
 ## T022 — `entities/vacancy`: add `publishVacancy`
@@ -223,7 +223,7 @@ error-shape handling needed here, just confirm the existing mapping covers it).
 
 ## T023 — `features/choose-vacancy-text-mode` (new)
 Plan: §10.1 item 1, §10.2, §10.3. New feature: Step 2's mode-choice UI. Two
-`ChoiceCard`s ("Zelf schrijven" / "Talmar stelt een concept op", the latter using the
+`ChoiceCard`s ("Zelf schrijven" / "Taldo stelt een concept op", the latter using the
 advice variant), the `AdviceCard` copy block below them, primary button disabled until
 `mode` is chosen, label "Beantwoord 3 vragen" (AI) vs. "Volgende" (manual). Controlled
 component: `mode`/`onModeChange`/`onNext` props, page owns `mode` state (plan §10.5).
@@ -302,8 +302,8 @@ Editable textareas save via `saveDescription`. "Opnieuw" only rendered in AI mod
 to the page-supplied `onRegenerate`. Both "Aanpassen" links call `onNavigateToStep`.
 
 ## T028 — `features/preview-vacancy` (new)
-Plan: §10.1 item 8, §10.2, §10.3. Candidate's-view screen: header block (Talmar symbol +
-"Geplaatst via Talmar", job title, four chips — location/workplace/hours(mono)/salary(mono)
+Plan: §10.1 item 8, §10.2, §10.3. Candidate's-view screen: header block (Taldo symbol +
+"Geplaatst via Taldo", job title, four chips — location/workplace/hours(mono)/salary(mono)
 or "Salaris in overleg"), body (summary, "Over de rol", "Wat je gaat doen",
 "Voorwaarden" mono), contact line + disabled "Solliciteren" button, footer (ghost
 "Terug" → back to step 4, secondary "Bewaren als concept" → reuses the existing save
@@ -384,15 +384,15 @@ T028, T029, T030, T031, T032.
 (T017/T019 superseded by T031/this task respectively — not independent dependencies of
 this gate, their work is subsumed by T031's extended flow and this final review.)
 Single end-of-feature review checkpoint for the **whole feature as it now stands**,
-including everything T019 already approved. `talmar-web-reviewer` runs against the
+including everything T019 already approved. `taldo-web-reviewer` runs against the
 full accumulated diff since the last review — FSD boundaries (Steiger/lint clean),
 API-boundary discipline, PII handling per plan §6, the shared-generation-hook
 single-instance discipline (plan §10.8), the two contract-gap ADRs' resolutions, ADR-0003
 and ADR-0004's resolutions actually implemented as written, test coverage per plan §7 +
 §10.6, and tablet responsiveness per T032's recorded verification. Do not mark this task
-complete except via the reviewer's `Reviewed-by: talmar-web-reviewer` sign-off.
+complete except via the reviewer's `Reviewed-by: taldo-web-reviewer` sign-off.
 
-**2026-09-20 — fixes applied for talmar-web-reviewer's REQUEST_CHANGES on T020-T032:**
+**2026-09-20 — fixes applied for taldo-web-reviewer's REQUEST_CHANGES on T020-T032:**
 - Data-loss bug: `VacancyContactOfferForm` now accepts an `initialValues` prop
   (`contactPerson`/`offer`), threaded from `VacancyCreatePage` the same way step 1 already
   does — navigating back to step 3 via the Stepper no longer blanks the form or nulls out
@@ -437,7 +437,7 @@ spec widths) is untouched, still using the exact literal padding/gap values from
 with the avatar fully visible) and the full check suite (`tsc -b`, `eslint . && steiger
 ./src`, `vitest run` 138/138, `vite build`, `playwright test` 1/1) all still green.
 
-Reviewed-by: talmar-web-reviewer — all 6 fixes verified against code (initialValues wiring, Select suffix, Card/AppShell CSS tokens, button-label split, formatSalary helper, Stepper done-state); tsc/eslint/steiger/vitest re-run independently and clean (138/138). APPROVE.
+Reviewed-by: taldo-web-reviewer — all 6 fixes verified against code (initialValues wiring, Select suffix, Card/AppShell CSS tokens, button-label split, formatSalary helper, Stepper done-state); tsc/eslint/steiger/vitest re-run independently and clean (138/138). APPROVE.
 
 ---
 
@@ -655,7 +655,7 @@ Single end-of-pass review checkpoint for this fine-tuning pass specifically (T00
 already carry T033's sign-off and are not re-reviewed here — but the reviewer should
 sanity-check T034-T042 doesn't regress anything T033 already approved: FSD boundaries/
 Steiger, API-boundary discipline, PII handling, the shared-generation-hook
-single-instance discipline). `talmar-web-reviewer` runs against the full diff since
+single-instance discipline). `taldo-web-reviewer` runs against the full diff since
 T033, checking: the manual-mode step 2/3 split (plan §11.1 item 2) and its documented,
 deliberate divergence from `design-notes.md`'s merged Step-3 variant; the §11.2
 feature-local merge actually closes the PO's exact repro (contact+salary surviving to
@@ -664,7 +664,7 @@ vakantiedagen visible with "Liever niet delen" checked and not visually overlapp
 Salarisperiode; no duplicate section labels/stray divider artifact in Overzicht; test
 coverage per plan §11.5; `tsc -b`, `eslint . && steiger ./src`, `vitest run`, `vite
 build`, `playwright test` all green. Do not mark this task complete except via the
-reviewer's `Reviewed-by: talmar-web-reviewer` sign-off.
+reviewer's `Reviewed-by: taldo-web-reviewer` sign-off.
 
 **Review fixes (round 1, REQUEST_CHANGES on T034-T042).** All five findings addressed,
 test-first, on top of commit `6758ccf`:
@@ -696,7 +696,7 @@ Re-verified: `tsc -b` clean, `eslint . && steiger ./src` clean, `vitest run` 179
 (`fix-step4-overzicht.png` in the scratchpad) showing the read-only state with an empty
 "Over de rol"/"Taken" placeholder and the grouped contact block.
 
-Reviewed-by: talmar-web-reviewer — round-1 findings (holiday wording, empty-section placeholder, h3 section headings, grouped contact block, same-session holiday redisplay) verified fixed in 61ee419; tsc/eslint/steiger/vitest (179/179)/build/e2e re-run independently and clean. APPROVE.
+Reviewed-by: taldo-web-reviewer — round-1 findings (holiday wording, empty-section placeholder, h3 section headings, grouped contact block, same-session holiday redisplay) verified fixed in 61ee419; tsc/eslint/steiger/vitest (179/179)/build/e2e re-run independently and clean. APPROVE.
 
 ---
 
@@ -794,4 +794,4 @@ Pure CSS/markup change; no new test (existing `VacancyPreview.test.tsx` — 6 te
 green, confirming no regression). Re-verified: `tsc -b` clean, `eslint . && steiger ./src`
 clean, `vitest run` 193/193. Screenshot: `r2-preview-header-fixed.png` in the scratchpad.
 
-Reviewed-by: talmar-web-reviewer — T044-T047 verified in a real browser (step gating, Land order + separator, 60px select/input parity at 800/1280px, preview button removed); round-1 fix (preview header 24px gap, 13px secondary breadcrumb) verified in 1548116; tsc/eslint/steiger/vitest (193/193)/build/e2e clean. APPROVE.
+Reviewed-by: taldo-web-reviewer — T044-T047 verified in a real browser (step gating, Land order + separator, 60px select/input parity at 800/1280px, preview button removed); round-1 fix (preview header 24px gap, 13px secondary breadcrumb) verified in 1548116; tsc/eslint/steiger/vitest (193/193)/build/e2e clean. APPROVE.

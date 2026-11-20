@@ -8,6 +8,9 @@ export type {
   ContactPerson,
   Offer,
   SalaryPeriod,
+  Language,
+  CurrencyCode,
+  VacancyTransitionAction,
 } from './model/types';
 export {
   categoryLabels,
@@ -16,6 +19,10 @@ export {
   workplaceTypeOptions,
   salaryPeriodLabels,
   salaryPeriodOptions,
+  languageLabels,
+  languageOptions,
+  currencyCodes,
+  currencyOptions,
 } from './lib/labels';
 export { formatSalary } from './lib/salary';
 export { formatHoursPerWeek } from './lib/hours';

@@ -1,7 +1,7 @@
 /*
  * Brand override for Keycloak pages that are not ejected yet (login, reset password, …).
- * Those render Keycloak's own PatternFly markup and CSS; this maps Talmar's tokens onto it so
- * nothing looks off-brand until each page gets its own React version in the Talmar Template.
+ * Those render Keycloak's own PatternFly markup and CSS; this maps Taldo's tokens onto it so
+ * nothing looks off-brand until each page gets its own React version in the Taldo Template.
  *
  * Scoped to html.login-pf, the class Keycloakify's default Template sets — ejected pages
  * (register) don't use that Template, so this never touches them.
@@ -29,7 +29,7 @@ html.login-pf body {
   font-family: var(--font-sans);
 }
 
-/* The ejected KeycloakTemplate puts the Talmar logo here instead of the realm name. */
+/* The ejected KeycloakTemplate puts the Taldo logo here instead of the realm name. */
 html.login-pf #kc-header-wrapper {
   display: flex;
   justify-content: center;
